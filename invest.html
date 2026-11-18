@@ -229,7 +229,7 @@
   <div class="glass panel">
     <div class="panel-head"><div><h2>全部投资</h2><div class="hint" id="invCountHint"></div></div></div>
     <div class="table-wrap" id="invTableWrap"></div>
-    <div class="tip">这里记的是<b>每一笔</b>买卖的明细，方便你看单项收益。理财整体的浮盈浮亏不在这里算，首页和上面的卡片是按月度余额自动算的。</div>
+    <div class="tip">这里记的是<b>每一笔</b>买卖的明细，方便你看单项收益。理财整体的浮盈浮亏不在这里算，首页和上面的卡片是按月度余额自动算的。<br><b style="color:#B45309">投资的钱已经在总资产里了</b>——以「理财渠道市值」的形式。这里的投入金额<b>不再重复计入总资产</b>，否则一笔钱算两遍。</div>
   </div>
 
 </div>
@@ -522,7 +522,7 @@ function renderInvStats(){
   if(latest){
     const iv=investValue(latest);
     document.getElementById('in1').textContent=fmtMoney(iv);
-    document.getElementById('is1').textContent='截至 '+monthLabel(latest.month);
+    document.getElementById('is1').textContent='来自资产页理财渠道 · 截至 '+monthLabel(latest.month);
   }else{
     document.getElementById('in1').textContent='—';
     document.getElementById('is1').textContent='还没有月度记录';
