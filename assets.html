@@ -237,26 +237,25 @@ function monthLabel(m){if(!m)return '';const p=m.split('-');return p[0]+'年'+Nu
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},2200);}
 
 /* ==================== 数据层 ==================== */
+/* 严禁预置任何编造的资产金额：账本打开即为空，全部数据由本人自行录入 */
 function seedState(){
   return {
     channels:DEFAULT_CHANNELS.slice(),
-    snapshots:[
-      {id:uid(),month:'2026-08',note:'',values:{'国债':300000,'银行账户':150000,'股票':80000,'支付宝':20000,'微信':8000,'债基':100000}},
-      {id:uid(),month:'2026-09',note:'',values:{'国债':300000,'银行账户':155000,'股票':85000,'支付宝':22000,'微信':9000,'债基':105000}},
-      {id:uid(),month:'2026-10',note:'',values:{'国债':300000,'银行账户':160000,'股票':92000,'支付宝':21000,'微信':7500,'债基':110000}}
-    ],
-    investments:[
-      {id:uid(),name:'黄金',channel:'支付宝',investAmount:50000,investDate:'2026-03-15',redeemAmount:0,redeemDate:'',status:'holding',note:'积存金，长期持有'},
-      {id:uid(),name:'债基A',channel:'银行账户',investAmount:100000,investDate:'2025-11-01',redeemAmount:106800,redeemDate:'2026-09-20',status:'redeemed',note:''},
-      {id:uid(),name:'债基B',channel:'支付宝',investAmount:80000,investDate:'2026-06-10',redeemAmount:0,redeemDate:'',status:'holding',note:''}
-    ],
-    isSample:true
+    snapshots:[],
+    investments:[],
+    isSample:false
   };
 }
 function loadState(){
   try{
     const raw=localStorage.getItem(KEY);
-    if(raw){const s=JSON.parse(raw);if(s&&Array.isArray(s.snapshots)&&Array.isArray(s.investments)&&Array.isArray(s.channels))return s;}
+    if(raw){
+      const s=JSON.parse(raw);
+      if(s&&Array.isArray(s.snapshots)&&Array.isArray(s.investments)&&Array.isArray(s.channels)){
+        if(s.isSample===true)return seedState();  // 丢弃旧版编造的示例数据，绝不再展示
+        return s;
+      }
+    }
   }catch(e){}
   const s=seedState();localStorage.setItem(KEY,JSON.stringify(s));return s;
 }
