@@ -578,9 +578,11 @@ function renderTodo(){
         desc:monthLabel(latest.month)+' 市值跌了，属于浮亏，不影响你日常支出统计',
         href:'invest.html',act:'看明细'});
     }
-    if(latest.investIn===0&&latest.investOut===0&&investValue(latest)>0){
-      items.push({badge:'核对',cls:'warn',title:'最近一期没填理财投入/赎回',
-        desc:'如果这月确实没买卖请忽略；若有，浮盈亏会算不准',
+    if(latest.investIn===0&&latest.investOut===0&&lastCalc.status!=='baseline'&&
+       lastCalc.deltaC<-0.005&&lastCalc.deltaM>0.005){
+      items.push({badge:'核对',cls:'warn',title:'最近一期像是买了理财但没填投入',
+        desc:'现金少了 '+fmtWan(-lastCalc.deltaC)+'、理财多了 '+fmtWan(lastCalc.deltaM)+
+          '，不填投入会被算成支出、还会被当成盈利',
         href:'assets.html',act:'去补填'});
     }
   }
