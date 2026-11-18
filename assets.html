@@ -231,6 +231,7 @@
   <div class="glass panel">
     <div class="panel-head"><div><h2>全部记录</h2><div class="hint" id="snapCountHint"></div></div></div>
     <div class="table-wrap" id="snapTableWrap"></div>
+    <div class="tip"><b>总资产 = 现金 + 理财</b>，也就是你填的各渠道余额之和。<b>收入不会再单独加一次</b>——工资到账后钱已经在下面对应渠道的余额里了，再加就重复了。收入这一栏只用来倒推日常支出。</div>
   </div>
 
 </div>
@@ -619,6 +620,7 @@ function snapForm(s){
     '<div class="field"><label>月份</label><input type="month" id="f_month" value="'+esc(cur.month)+'"></div>'+
     '<div class="field"><label>本月收入（元）</label><input type="number" inputmode="decimal" step="0.01" min="0" id="f_income" value="'+(incInit===''?'':num(incInit))+(incInit===''?' placeholder="如工资 12000"':'')+'"></div>'+
     '</div>';
+  f+='<div class="tip" style="margin:-2px 0 14px">收入<b>不用</b>加进总资产：这笔钱到账后，已经包含在下面渠道的余额里了。这里填收入只用来倒推日常支出。</div>';
   f+='<div class="field" style="margin-bottom:8px"><label>各渠道余额（元）</label></div><div class="grid2">';
   state.channels.forEach(function(c){
     const nm=chName(c);
