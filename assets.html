@@ -603,11 +603,25 @@ function updatePreview(){
     '<div class="pv-row" style="margin-top:6px"><span>理财市值变化</span><b class="'+clsOf(o.dM)+'">'+fmtSigned(o.dM)+'</b></div>'+
     '<div class="pv-row"><span>本月理财盈亏（浮）</span><b class="'+clsOf(o.g)+'">'+fmtSigned(o.g)+'</b></div>';
   const hints=[];
+  let quick='';
   if(o.span>1)hints.push('距上次记录已过 '+o.span+' 个月，本期支出是合并值');
   if(o.income===0)hints.push('收入填了 0，若有收入请补上，否则支出会被算低');
   if(o.e<0)hints.push('支出为负：本月现金不降反增且超过你填的收入，看看是不是收入没填全（奖金/报销/回款）');
-  if(hints.length)h+='<div class="hintline">'+hints.join('<br>')+'</div>';
+  /* 现金减少 + 理财增加，但没填投入 → 极可能是拿现金买了理财 */
+  if(Math.abs(o.f)<0.005&&o.dC<-0.005&&o.dM>0.005){
+    hints.push('现金少了 <b>'+fmtMoney(-o.dC)+'</b>、理财多了 <b>'+fmtMoney(o.dM)+'</b>，这看着像是拿现金买了理财。'+
+      '如果不填「买入/投入」，这笔会被算成<b>日常支出</b>，同时被当成<b>理财盈利</b>，两个数都会歪。');
+    quick='<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="quickFillInvest('+(-o.dC).toFixed(2)+')">按现金减少额填入投入 '+fmtMoney(-o.dC)+'</button>';
+  }
+  if(hints.length)h+='<div class="hintline">'+hints.join('<br>')+quick+'</div>';
   box.innerHTML=h;
+}
+function quickFillInvest(v){
+  const fin=document.getElementById('f_fin');if(!fin)return;
+  fin.value=Math.round(v*100)/100;
+  const fout=document.getElementById('f_fout');if(fout)fout.value='';
+  updatePreview();
+  toast('已按现金减少额填入投入，如有差额请自行调整');
 }
 function snapForm(s){
   editingId=s?s.id:null;
@@ -631,7 +645,7 @@ function snapForm(s){
       '<input type="number" inputmode="decimal" step="0.01" min="0" data-ch="'+esc(nm)+'" data-inv="'+(chIsInv(c)?'1':'0')+'" value="'+(v===undefined||v===null?'':v)+'" placeholder="0.00"></div>';
   });
   f+='</div>';
-  f+='<div class="field" style="margin-bottom:8px"><label>本月理财操作（合计，可留空）</label></div><div class="grid2">'+
+  f+='<div class="field" style="margin-bottom:8px"><label>本月买入 / 卖出理财（合计）——用现金买了理财，这里必须填</label></div><div class="grid2">'+
     '<div class="field"><label>买入 / 投入（元）</label><input type="number" inputmode="decimal" step="0.01" min="0" id="f_fin" value="'+(cur.investIn?num(cur.investIn):'')+'" placeholder="0.00"></div>'+
     '<div class="field"><label>卖出 / 赎回（元）</label><input type="number" inputmode="decimal" step="0.01" min="0" id="f_fout" value="'+(cur.investOut?num(cur.investOut):'')+'" placeholder="0.00"></div>'+
     '</div>';
