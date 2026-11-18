@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="资产记账本">
+<meta name="theme-color" content="#2563EB">
+<title>资产记账本</title>
+<!-- 本地单文件方案：数据存浏览器 localStorage，支持 JSON 备份迁移；发布为永久在线链接 -->
+<style>
+  :root{
+    --primary:#2563EB; --primary-d:#1D4ED8;
+    --ink:#1E3A5F; --ink2:#5B7DA6; --ink3:#94A3B8; --white:#fff;
+    --up:#DC2626; --down:#15803D;          /* 资产/收益：涨红跌绿（国内金融习惯） */
+    --line:rgba(37,99,235,.12);
+    --glass:rgba(255,255,255,.55);
+    --glass-strong:rgba(255,255,255,.78);
+    --stroke:rgba(255,255,255,.85);
+    --bad:#DC2626; --bad-bg:rgba(254,226,226,.8);
+    --warn:#B45309; --warn-bg:rgba(254,243,199,.8);
+    --ok:#15803D; --ok-bg:rgba(220,252,231,.8);
+    --info:#2563EB; --info-bg:rgba(219,234,254,.8);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:linear-gradient(135deg,#DCE8F7,#EDF2FA,#D6E4F5);
+    background-attachment:fixed;min-height:100vh;color:var(--ink);font-size:13px;line-height:1.5;
+    padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  }
+  .app{max-width:1080px;margin:0 auto;padding:20px 16px 0}
+  .glass{
+    background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--stroke);border-radius:17px;
+    box-shadow:0 6px 22px rgba(37,99,235,.07);
+  }
+  /* 顶栏 */
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+  .brand .icobox{width:40px;height:40px;border-radius:12px;background:#EBF1FF;display:flex;align-items:center;justify-content:center;color:var(--primary)}
+  .brand h1{font-size:17px;font-weight:800;color:#1E3A8A;letter-spacing:.3px}
+  .brand p{font-size:11px;color:var(--ink2);margin-top:1px}
+  .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+  /* 按钮 */
+  button{font-family:inherit;font-size:13px;cursor:pointer;border:none;background:none;color:inherit}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 15px;border-radius:12px;font-weight:600;transition:.15s;white-space:nowrap}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover{background:var(--primary-d)}
+  .btn-ghost{background:var(--glass-strong);border:1px solid var(--stroke);color:var(--primary)}
+  .btn-ghost:hover{background:#fff}
+  .btn-danger{background:var(--glass-strong);border:1px solid rgba(220,38,38,.35);color:var(--bad)}
+  .btn-danger:hover{background:rgba(220,38,38,.08)}
+  .btn-sm{min-height:38px;padding:0 11px;font-size:12px;border-radius:10px}
+  .icon-btn{width:34px;height:34px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink3);transition:.15s}
+  .icon-btn:hover{background:rgba(37,99,235,.1);color:var(--primary)}
+  .icon-btn.del:hover{background:rgba(220,38,38,.1);color:var(--bad)}
+  /* 今天要处理 */
+  .todo{padding:16px 18px;margin-bottom:14px;border-left:4px solid var(--primary)}
+  .sec-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:var(--ink);margin-bottom:12px}
+  .sec-title .dot{width:7px;height:7px;border-radius:50%;background:var(--primary)}
+  .todo-list{display:flex;flex-direction:column;gap:9px}
+  .todo-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;background:var(--glass-strong)}
+  .todo-item .badge{flex:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9px}
+  .badge.bad{color:var(--bad);background:var(--bad-bg)}
+  .badge.warn{color:var(--warn);background:var(--warn-bg)}
+  .badge.info{color:var(--info);background:var(--info-bg)}
+  .todo-item .txt{flex:1;min-width:0}
+  .todo-item .txt b{color:var(--ink)}
+  .todo-item .txt small{display:block;color:var(--ink2);font-size:11px;margin-top:1px}
+  .empty-ok{display:flex;align-items:center;gap:8px;color:var(--ok);font-size:13px;font-weight:600;padding:6px 2px}
+  /* 统计卡 */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:14px}
+  .stat{padding:15px 16px;position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary)}
+  .stat.c2::before{background:#0891B2}.stat.c3::before{background:#4F46E5}.stat.c4::before{background:#64748B}
+  .stat .lab{font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:6px;margin-bottom:7px}
+  .stat .num{font-size:28px;font-weight:800;color:#172554;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .stat .sub{font-size:11px;color:var(--ink3);margin-top:6px}
+  .stat .num.up{color:var(--up)}.stat .num.down{color:var(--down)}
+  /* Tab */
+  .tabs{display:flex;gap:26px;border-bottom:1px solid var(--line);margin:4px 2px 14px}
+  .tab{padding:10px 2px 12px;font-size:14px;font-weight:600;color:var(--ink2);border-bottom:2px solid transparent;display:flex;align-items:center;gap:7px}
+  .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:800}
+  /* 面板 */
+  .panel{padding:17px 18px;margin-bottom:14px}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .panel-head h2{font-size:14px;font-weight:800;color:var(--ink)}
+  .panel-head .hint{font-size:11px;color:var(--ink3);font-weight:400;margin-top:2px}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+  /* 渠道设置 */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 6px 6px 11px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--stroke);font-size:12px;color:var(--ink);font-weight:600}
+  .chip .x{width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink3);cursor:pointer}
+  .chip .x:hover{background:rgba(220,38,38,.12);color:var(--bad)}
+  .chip-add{display:inline-flex;align-items:center;gap:5px;padding:7px 11px;border-radius:10px;border:1px dashed var(--primary);color:var(--primary);font-size:12px;font-weight:600;cursor:pointer;background:transparent}
+  .chip-add:hover{background:#EBF1FF}
+  /* 图表 */
+  .chart-wrap{width:100%;overflow:hidden}
+  .chart-wrap svg{width:100%;height:auto;display:block}
+  /* 表格 */
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:560px}
+  th,td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{font-size:12px;color:var(--ink2);font-weight:700;background:rgba(255,255,255,.35)}
+  tbody tr:nth-child(even){background:rgba(255,255,255,.12)}
+  tbody tr:hover{background:rgba(219,234,254,.45)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9px}
+  .tag.hold{color:var(--warn);background:var(--warn-bg)}
+  .tag.done{color:var(--ok);background:var(--ok-bg)}
+  .val-up{color:var(--up)}.val-down{color:var(--down)}.val-flat{color:var(--ink2)}
+  /* 备份区 */
+  .backup{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .tip{font-size:11px;color:var(--ink2);margin-top:10px;line-height:1.6}
+  /* iPhone 添加到主屏幕提示（仅 Safari 显示） */
+  .ios-tip{display:none;padding:13px 15px;margin-bottom:14px;border-left:4px solid #0891B2;line-height:1.7}
+  .ios-tip b{color:#1E3A8A}
+  .ios-tip .steps{font-size:12px;color:var(--ink);margin-top:5px}
+  body.is-ios-safari .ios-tip{display:block}
+  /* 空状态 */
+  .empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:34px 10px;color:var(--ink3)}
+  .empty span{font-size:12px}
+  /* 模态框 */
+  .mask{position:fixed;inset:0;background:rgba(30,58,95,.32);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+  .modal{background:rgba(255,255,255,.95);border:1px solid var(--stroke);border-radius:18px;width:100%;max-width:520px;max-height:88vh;overflow:auto;box-shadow:0 20px 60px rgba(30,58,95,.25)}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .modal-head h3{font-size:15px;font-weight:800;color:#1E3A8A}
+  .modal-body{padding:18px 20px}
+  .modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:14px 20px;border-top:1px solid var(--line)}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;color:var(--ink2);font-weight:600;margin-bottom:6px}
+  .field input,.field select,.field textarea{
+    width:100%;font-size:16px;font-family:inherit;color:var(--ink);
+    padding:10px 12px;min-height:44px;border:1px solid var(--stroke);border-radius:12px;
+    background:var(--glass-strong);outline:none;transition:.15s;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .field textarea{resize:vertical;min-height:64px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .confirm-txt{font-size:14px;color:var(--ink);line-height:1.7;padding:6px 0}
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:rgba(30,58,95,.94);color:#fff;padding:11px 20px;border-radius:12px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:80;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .notice{font-size:11px;color:var(--warn);background:var(--warn-bg);padding:9px 12px;border-radius:10px;margin-bottom:12px;line-height:1.6}
+  /* 响应式 */
+  @media(max-width:820px){.stats{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){
+    .app{padding:14px 12px 0}
+    .topbar{padding:14px}
+    .brand h1{font-size:16px}
+    .stats{gap:10px}
+    .stat{padding:13px 12px}
+    .stat .num{font-size:19px;letter-spacing:-1px}
+    .todo-item{flex-wrap:wrap}
+    .todo-item .btn{margin-left:auto;flex-shrink:0}
+    .panel{padding:14px}
+    .grid2{grid-template-columns:1fr;gap:0}
+    .tab{font-size:13px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- 顶栏 -->
+  <div class="glass topbar">
+    <div class="brand">
+      <div class="icobox" id="brandIco"></div>
+      <div><h1>资产记账本</h1><p>钱Boss的全渠道资产台账 · 每月一记</p></div>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-ghost btn-sm" id="btnExportJson"></button>
+      <button class="btn btn-ghost btn-sm" id="btnImportJson"></button>
+    </div>
+  </div>
+
+  <!-- iPhone 添加到主屏幕提示 -->
+  <div class="glass ios-tip">
+    <div class="sec-title"><span class="dot" style="background:#0891B2"></span>在苹果手机上当 App 用</div>
+    <div class="steps">点 Safari 底部的 <b>分享按钮</b>（方框向上箭头）→ 下滑找到 <b>「添加到主屏幕」</b> → 点<b>添加</b>。桌面上就多一个记账本图标，点开全屏使用，跟 App 一样。</div>
+  </div>
+
+  <!-- 今天要处理 -->
+  <div class="glass todo" id="todoCard">
+    <div class="sec-title"><span class="dot"></span>今天要处理</div>
+    <div class="todo-list" id="todoList"></div>
+  </div>
+
+  <!-- 统计卡 -->
+  <div class="stats">
+    <div class="glass stat c1"><div class="lab" id="lab1"></div><div class="num" id="num1">—</div><div class="sub" id="sub1"></div></div>
+    <div class="glass stat c2"><div class="lab" id="lab2"></div><div class="num" id="num2">—</div><div class="sub" id="sub2"></div></div>
+    <div class="glass stat c3"><div class="lab" id="lab3"></div><div class="num" id="num3">—</div><div class="sub" id="sub3"></div></div>
+    <div class="glass stat c4"><div class="lab" id="lab4"></div><div class="num" id="num4">—</div><div class="sub" id="sub4"></div></div>
+  </div>
+
+  <!-- Tab -->
+  <div class="tabs">
+    <button class="tab active" data-tab="snap" id="tabSnapBtn"></button>
+    <button class="tab" data-tab="inv" id="tabInvBtn"></button>
+  </div>
+
+  <!-- 台账面板 -->
+  <section id="panelSnap">
+    <div class="glass panel">
+      <div class="panel-head">
+        <div><h2>月度资产台账</h2><div class="hint">每月记录一次各渠道余额，自动汇总总资产</div></div>
+        <div class="row-actions">
+          <button class="btn btn-ghost btn-sm" id="btnExportSnapCsv"></button>
+          <button class="btn btn-primary btn-sm" id="btnAddSnap"></button>
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div class="chips" id="channelChips"></div>
+      </div>
+      <div class="table-wrap" id="snapTableWrap"></div>
+    </div>
+    <div class="glass panel">
+      <div class="panel-head"><div><h2>总资产变化趋势</h2><div class="hint">按月份展示近 6 次记录的总资产</div></div></div>
+      <div class="chart-wrap" id="chartWrap"></div>
+    </div>
+  </section>
+
+  <!-- 投资面板 -->
+  <section id="panelInv" style="display:none">
+    <div class="glass panel">
+      <div class="panel-head">
+        <div><h2>投资明细</h2><div class="hint">黄金 / 债基等投入与赎回，自动算收益</div></div>
+        <div class="row-actions">
+          <button class="btn btn-ghost btn-sm" id="btnExportInvCsv"></button>
+          <button class="btn btn-primary btn-sm" id="btnAddInv"></button>
+        </div>
+      </div>
+      <div class="table-wrap" id="invTableWrap"></div>
+    </div>
+  </section>
+
+  <!-- 备份区 -->
+  <div class="glass panel">
+    <div class="panel-head"><div><h2>数据备份与恢复</h2><div class="hint">数据保存在本设备浏览器，换设备请用 JSON 备份迁移</div></div></div>
+    <div class="notice" style="color:var(--ok);background:var(--ok-bg);display:flex;align-items:flex-start;gap:8px">
+      <span id="localNoteIco" style="flex:none;margin-top:1px"></span>
+      <span>你的资产数据<b>只保存在这台设备的浏览器里</b>，不会上传到任何服务器。别人就算拿到同一个链接，打开的也是他自己的空白账本，看不到你的一个数字。</span>
+    </div>
+    <div class="backup">
+      <button class="btn btn-ghost btn-sm" id="btnExportJson2"></button>
+      <button class="btn btn-ghost btn-sm" id="btnImportJson2"></button>
+      <button class="btn btn-ghost btn-sm" id="btnExportAllCsv"></button>
+      <button class="btn btn-danger btn-sm" id="btnClearSample"></button>
+      <button class="btn btn-danger btn-sm" id="btnClearAll"></button>
+    </div>
+    <div class="tip" id="backupTip"></div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+
+<script>
+/* ==================== 图标字典（全站统一线性 SVG） ==================== */
+const ICONS = {
+  wallet:'<path d="M20 7V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V6"/><path d="M16 12h.01"/>',
+  chart:'<path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/>',
+  invest:'<path d="M3 17 9 11l4 4 8-8"/><path d="M15 3h6v6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  trash:'<path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>',
+  download:'<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 20h16"/>',
+  upload:'<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/>',
+  close:'<path d="M18 6 6 18M6 6l12 12"/>',
+  check:'<path d="m5 12 5 5L20 7"/>',
+  alert:'<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21h-4v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
+  coin:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h4a2 2 0 0 1 0 4H9M9 12h5"/>',
+  refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>'
+};
+function icon(name,size){size=size||18;return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||'')+'</svg>';}
+
+/* ==================== 常量与工具 ==================== */
+const KEY='wb_zjben_state_v1';
+const DEFAULT_CHANNELS=['国债','银行账户','股票','支付宝','微信','债基'];
+const today=new Date();
+const CUR_MONTH=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+
+function uid(){return 'id_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);}
+function fmtMoney(n){if(n===null||n===undefined||isNaN(n))return '—';return '¥'+Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtWan(n){if(n===null||n===undefined||isNaN(n))return '—';if(Math.abs(n)>=10000)return (n/10000).toFixed(1)+'万';return Number(n).toLocaleString('zh-CN');}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function monthLabel(m){if(!m)return '';const p=m.split('-');return p[0]+'年'+Number(p[1])+'月';}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('show'),2200);}
+
+/* ==================== 数据层：读写 + 示例数据 ==================== */
+function seedState(){
+  return {
+    channels:DEFAULT_CHANNELS.slice(),
+    snapshots:[
+      {id:uid(),month:'2026-08',note:'',values:{'国债':300000,'银行账户':150000,'股票':80000,'支付宝':20000,'微信':8000,'债基':100000}},
+      {id:uid(),month:'2026-09',note:'',values:{'国债':300000,'银行账户':155000,'股票':85000,'支付宝':22000,'微信':9000,'债基':105000}},
+      {id:uid(),month:'2026-10',note:'',values:{'国债':300000,'银行账户':160000,'股票':92000,'支付宝':21000,'微信':7500,'债基':110000}}
+    ],
+    investments:[
+      {id:uid(),name:'黄金',channel:'支付宝',investAmount:50000,investDate:'2026-03-15',redeemAmount:0,redeemDate:'',status:'holding',note:'积存金，长期持有'},
+      {id:uid(),name:'债基A',channel:'银行账户',investAmount:100000,investDate:'2025-11-01',redeemAmount:106800,redeemDate:'2026-09-20',status:'redeemed',note:''},
+      {id:uid(),name:'债基B',channel:'支付宝',investAmount:80000,investDate:'2026-06-10',redeemAmount:0,redeemDate:'',status:'holding',note:''}
+    ],
+    isSample:true
+  };
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){const s=JSON.parse(raw);if(s&&Array.isArray(s.snapshots)&&Array.isArray(s.investments)&&Array.isArray(s.channels))return s;}
+  }catch(e){}
+  const s=seedState();localStorage.setItem(KEY,JSON.stringify(s));return s;
+}
+function saveState(){localStorage.setItem(KEY,JSON.stringify(state));}
+let state=loadState();
+
+/* ==================== 计算层 ==================== */
+function snapTotal(s){let t=0;for(const k in s.values){const v=Number(s.values[k]);if(!isNaN(v))t+=v;}return t;}
+function sortedSnaps(){return state.snapshots.slice().sort((a,b)=>a.month.localeCompare(b.month));}
+function latestSnap(){const a=sortedSnaps();return a.length?a[a.length-1]:null;}
+function prevSnap(){const a=sortedSnaps();return a.length>1?a[a.length-2]:null;}
+function hasMonth(m){return state.snapshots.some(s=>s.month===m);}
+function investProfit(inv){if(inv.status!=='redeemed')return null;const r=Number(inv.redeemAmount)||0,i=Number(inv.investAmount)||0;return r-i;}
+function realizedProfit(){let t=0;for(const inv of state.investments){const p=investProfit(inv);if(p!==null)t+=p;}return t;}
+function holdingCount(){return state.investments.filter(i=>i.status==='holding').length;}
+
+/* ==================== 渲染层：各模块独立，互不调用 ==================== */
+function renderTodo(){
+  const box=document.getElementById('todoList');const items=[];
+  if(!hasMonth(CUR_MONTH)){
+    const day=today.getDate();
+    const overdue=day>5;
+    items.push({badge:overdue?'逾期':'待办',cls:overdue?'bad':'warn',
+      title:monthLabel(CUR_MONTH)+'资产尚未记录',
+      desc:overdue?('已过 '+day+' 号，本月资产还没记账，建议尽快补上'):'本月还没记账，月初记录更省心',
+      act:'去记录',fn:'addSnap'});
+  }
+  const hc=holdingCount();
+  if(hc>0){
+    items.push({badge:'关注',cls:'info',title:'有 '+hc+' 笔投资持有中',
+      desc:'记得关注黄金 / 债基的赎回时机与收益',act:'去看看',fn:'goInvest'});
+  }
+  if(!items.length){
+    box.innerHTML='<div class="empty-ok">'+icon('check',18)+' 本月已记账，暂无待处理事项</div>';return;
+  }
+  box.innerHTML=items.map(it=>
+    '<div class="todo-item"><span class="badge '+it.cls+'">'+it.badge+'</span>'+
+    '<div class="txt"><b>'+esc(it.title)+'</b><small>'+esc(it.desc)+'</small></div>'+
+    '<button class="btn btn-ghost btn-sm" onclick="todoAction(\''+it.fn+'\')">'+it.act+'</button></div>'
+  ).join('');
+}
+function renderStats(){
+  const latest=latestSnap(),prev=prevSnap();
+  const total=latest?snapTotal(latest):null;
+  let diff=null;if(latest&&prev)diff=snapTotal(latest)-snapTotal(prev);
+  document.getElementById('lab1').innerHTML=icon('wallet',16)+'当前总资产';
+  document.getElementById('num1').textContent=fmtMoney(total);
+  document.getElementById('sub1').textContent=latest?('截至 '+latest.month):'暂无记录';
+  const cls=diff===null?'':(diff>0?'up':(diff<0?'down':''));
+  const arrow=diff===null?'':(diff>0?' ↑':(diff<0?' ↓':''));
+  document.getElementById('lab2').innerHTML=icon('chart',16)+'较上月变化';
+  document.getElementById('num2').textContent=diff===null?'—':((diff>0?'+':'')+fmtMoney(diff)+arrow);
+  document.getElementById('num2').className='num '+cls;
+  document.getElementById('sub2').textContent=latest&&prev?(monthLabel(prev.month)+' → '+monthLabel(latest.month)):'至少需两条记录';
+  document.getElementById('lab3').innerHTML=icon('invest',16)+'累计已实现收益';
+  const rp=realizedProfit();
+  document.getElementById('num3').textContent=fmtMoney(rp);
+  document.getElementById('num3').className='num '+(rp>0?'up':(rp<0?'down':''));
+  document.getElementById('sub3').textContent='已赎回投资的盈亏合计';
+  document.getElementById('lab4').innerHTML=icon('coin',16)+'持有中投资';
+  document.getElementById('num4').textContent=holdingCount()+' 笔';
+  document.getElementById('sub4').textContent='黄金 / 债基等在途';
+}
+function renderChannels(){
+  const box=document.getElementById('channelChips');
+  box.innerHTML=state.channels.map(c=>
+    '<span class="chip">'+esc(c)+'<span class="x" title="删除渠道" onclick="removeChannel(\''+esc(c)+'\')">'+icon('close',13)+'</span></span>'
+  ).join('')+'<span class="chip-add" onclick="addChannel()">'+icon('plus',14)+' 添加渠道</span>';
+}
+function renderSnapTable(){
+  const box=document.getElementById('snapTableWrap');
+  const arr=sortedSnaps().reverse();
+  if(!arr.length){box.innerHTML='<div class="empty">'+icon('calendar',24)+'<span>还没有资产记录，点「记一笔」开始</span></div>';return;}
+  const chs=state.channels;
+  let h='<table><thead><tr><th>月份</th>';
+  chs.forEach(c=>h+='<th class="num">'+esc(c)+'</th>');
+  h+='<th class="num">总资产</th><th>备注</th><th style="width:76px">操作</th></tr></thead><tbody>';
+  arr.forEach(s=>{
+    const t=snapTotal(s);
+    h+='<tr><td><b>'+monthLabel(s.month)+'</b></td>';
+    chs.forEach(c=>{const v=Number(s.values[c]);h+='<td class="num">'+(isNaN(v)?'—':fmtWan(v))+'</td>';});
+    h+='<td class="num" style="color:#172554">'+fmtWan(t)+'</td>';
+    h+='<td>'+(s.note?esc(s.note):'<span style="color:#94A3B8">—</span>')+'</td>';
+    h+='<td><button class="icon-btn" title="编辑" onclick="editSnap(\''+s.id+'\')">'+icon('edit',16)+'</button>'+
+       '<button class="icon-btn del" title="删除" onclick="delSnap(\''+s.id+'\')">'+icon('trash',16)+'</button></td></tr>';
+  });
+  h+='</tbody></table>';
+  box.innerHTML=h;
+}
+function renderChart(){
+  const box=document.getElementById('chartWrap');
+  const arr=sortedSnaps().slice(-6);
+  if(arr.length<2){box.innerHTML='<div class="empty">'+icon('chart',24)+'<span>至少记录 2 个月，即可查看资产变化趋势</span></div>';return;}
+  const W=640,H=210,padL=54,padR=16,padT=16,padB=34;
+  const vals=arr.map(snapTotal);
+  let min=Math.min.apply(null,vals),max=Math.max.apply(null,vals);
+  const span=(max-min)||1;min=Math.max(0,min-span*0.15);max=max+span*0.15;
+  const iw=W-padL-padR,ih=H-padT-padB;
+  const pts=arr.map((s,i)=>{
+    const x=padL+(arr.length===1?iw/2:iw*i/(arr.length-1));
+    const y=padT+ih-(snapTotal(s)-min)/(max-min)*ih;
+    return {x:x,y:y,s:s,v:snapTotal(s)};
+  });
+  let grid='';
+  for(let g=0;g<=3;g++){
+    const gy=padT+ih*g/3;
+    const gv=max-(max-min)*g/3;
+    grid+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="rgba(37,99,235,.1)" stroke-dasharray="4 4"/>'+
+          '<text x="'+(padL-8)+'" y="'+(gy+4)+'" fill="#94A3B8" font-size="10" text-anchor="end">'+fmtWan(gv)+'</text>';
+  }
+  const line=pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+  const area=line+' L'+pts[pts.length-1].x.toFixed(1)+' '+(padT+ih)+' L'+pts[0].x.toFixed(1)+' '+(padT+ih)+' Z';
+  let dots='';
+  pts.forEach((p,i)=>{
+    const lbl=Number(p.s.month.split('-')[1])+'月';
+    dots+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="4.5" fill="#fff" stroke="#2563EB" stroke-width="2.5"/>';
+    dots+='<text x="'+p.x.toFixed(1)+'" y="'+(p.y-11).toFixed(1)+'" fill="#1E3A5F" font-size="10" font-weight="700" text-anchor="middle">'+fmtWan(p.v)+'</text>';
+    dots+='<text x="'+p.x.toFixed(1)+'" y="'+(H-10)+'" fill="#5B7DA6" font-size="11" text-anchor="middle">'+lbl+'</text>';
+  });
+  box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+
+    '<defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563EB" stop-opacity=".22"/><stop offset="100%" stop-color="#2563EB" stop-opacity="0"/></linearGradient></defs>'+
+    grid+'<path d="'+area+'" fill="url(#gArea)"/><path d="'+line+'" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+dots+'</svg>';
+}
+function renderInvTable(){
+  const box=document.getElementById('invTableWrap');
+  if(!state.investments.length){box.innerHTML='<div class="empty">'+icon('invest',24)+'<span>还没有投资记录，点「记一笔投资」开始</span></div>';return;}
+  let h='<table><thead><tr><th>项目</th><th>渠道</th><th class="num">投入金额</th><th>投入时间</th><th class="num">赎回金额</th><th>赎回时间</th><th class="num">收益</th><th>状态</th><th style="width:76px">操作</th></tr></thead><tbody>';
+  state.investments.slice().sort((a,b)=>(b.investDate||'').localeCompare(a.investDate||'')).forEach(v=>{
+    const p=investProfit(v);
+    const pcls=p===null?'':(p>0?'val-up':(p<0?'val-down':'val-flat'));
+    const ptxt=p===null?'—':((p>0?'+':'')+fmtMoney(p));
+    h+='<tr><td><b>'+esc(v.name)+'</b>'+(v.note?'<div style="font-size:11px;color:#94A3B8;font-weight:400">'+esc(v.note)+'</div>':'')+'</td>';
+    h+='<td>'+esc(v.channel||'—')+'</td>';
+    h+='<td class="num">'+fmtMoney(Number(v.investAmount))+'</td>';
+    h+='<td>'+(v.investDate||'—')+'</td>';
+    h+='<td class="num">'+(v.status==='redeemed'?fmtMoney(Number(v.redeemAmount)):'—')+'</td>';
+    h+='<td>'+(v.redeemDate||'—')+'</td>';
+    h+='<td class="num '+pcls+'">'+ptxt+'</td>';
+    h+='<td><span class="tag '+(v.status==='redeemed'?'done':'hold')+'">'+(v.status==='redeemed'?'已赎回':'持有中')+'</span></td>';
+    h+='<td><button class="icon-btn" title="编辑" onclick="editInv(\''+v.id+'\')">'+icon('edit',16)+'</button>'+
+       '<button class="icon-btn del" title="删除" onclick="delInv(\''+v.id+'\')">'+icon('trash',16)+'</button></td></tr>';
+  });
+  h+='</tbody></table>';
+  box.innerHTML=h;
+}
+function updateBackupTip(){
+  const n=state.snapshots.length+state.investments.length;
+  document.getElementById('backupTip').innerHTML='当前共 '+state.snapshots.length+' 条资产记录、'+state.investments.length+' 条投资记录。'+
+    (n>=30?' <b style="color:#B45309">数据已积累较多，建议点「导出 JSON 备份」保存一份。</b>':'')+
+    '<br>提示：数据只在这台设备的浏览器里，不上传云端。清理浏览器数据 / 换设备 / 无痕模式关闭后会丢失，请养成每月导出一次 JSON 备份的习惯。';
+}
+/* 统一刷新入口：按固定顺序调用，渲染函数之间互不调用 */
+function refreshAll(){
+  renderTodo();renderStats();renderChannels();renderSnapTable();renderChart();renderInvTable();updateBackupTip();
+}
+
+/* ==================== 交互：待办动作 / Tab ==================== */
+function todoAction(fn){if(fn==='addSnap'){addSnap();}else if(fn==='goInvest'){switchTab('inv');}}
+function switchTab(t){
+  const isSnap=t==='snap';
+  document.getElementById('panelSnap').style.display=isSnap?'':'none';
+  document.getElementById('panelInv').style.display=isSnap?'none':'';
+  document.getElementById('tabSnapBtn').classList.toggle('active',isSnap);
+  document.getElementById('tabInvBtn').classList.toggle('active',!isSnap);
+}
+
+/* ==================== 模态框 ==================== */
+function closeModal(){document.getElementById('modalRoot').innerHTML='';}
+function openModal(title,bodyHtml,footHtml){
+  document.getElementById('modalRoot').innerHTML=
+    '<div class="mask" onclick="if(event.target===this)closeModal()"><div class="modal">'+
+    '<div class="modal-head"><h3>'+title+'</h3><button class="icon-btn" onclick="closeModal()">'+icon('close',18)+'</button></div>'+
+    '<div class="modal-body">'+bodyHtml+'</div>'+
+    '<div class="modal-foot">'+footHtml+'</div></div></div>';
+}
+function showConfirm(msg,onYes){
+  openModal('请确认','<div class="confirm-txt">'+msg+'</div>',
+    '<button class="btn btn-ghost btn-sm" onclick="closeModal()">取消</button>'+
+    '<button class="btn btn-danger btn-sm" id="confirmYes">确定</button>');
+  document.getElementById('confirmYes').onclick=()=>{closeModal();onYes();};
+}
+
+/* ==================== 台账 CRUD ==================== */
+function snapForm(s){
+  const isEdit=!!s;
+  const cur=s||{month:CUR_MONTH,note:'',values:{}};
+  let fields='<div class="field"><label>月份</label><input type="month" id="f_month" value="'+esc(cur.month)+'"></div>';
+  fields+='<div class="grid2">';
+  state.channels.forEach(c=>{
+    const v=cur.values[c];
+    fields+='<div class="field"><label>'+esc(c)+'（元）</label><input type="number" inputmode="decimal" step="0.01" min="0" data-ch="'+esc(c)+'" value="'+(v==null?'':v)+'" placeholder="0.00"></div>';
+  });
+  fields+='</div>';
+  fields+='<div class="field"><label>备注（选填）</label><textarea id="f_note" placeholder="如：本月新增国债 5 万">'+esc(cur.note)+'</textarea></div>';
+  openModal(isEdit?'编辑资产记录':'记一笔资产',fields,
+    '<button class="btn btn-ghost btn-sm" onclick="closeModal()">取消</button>'+
+    '<button class="btn btn-primary btn-sm" id="saveSnap">保存</button>');
+  document.getElementById('saveSnap').onclick=()=>saveSnap(s);
+}
+function addSnap(){snapForm(null);}
+function editSnap(id){const s=state.snapshots.find(x=>x.id===id);if(s)snapForm(s);}
+function saveSnap(origin){
+  const month=document.getElementById('f_month').value;
+  if(!month){toast('请选择月份');return;}
+  const values={};
+  document.querySelectorAll('#modalRoot input[data-ch]').forEach(inp=>{
+    const v=inp.value.trim();if(v!=='')values[inp.getAttribute('data-ch')]=Number(v);
+  });
+  const note=document.getElementById('f_note').value.trim();
+  if(origin){
+    origin.month=month;origin.values=values;origin.note=note;
+  }else{
+    const exist=state.snapshots.find(x=>x.month===month);
+    if(exist){exist.values=values;exist.note=note;}
+    else state.snapshots.push({id:uid(),month:month,values:values,note:note});
+  }
+  state.isSample=false;saveState();closeModal();refreshAll();toast('已保存 '+monthLabel(month)+' 资产');
+}
+function delSnap(id){
+  const s=state.snapshots.find(x=>x.id===id);if(!s)return;
+  showConfirm('确定删除 '+monthLabel(s.month)+' 的资产记录吗？此操作不可恢复。',()=>{
+    state.snapshots=state.snapshots.filter(x=>x.id!==id);saveState();refreshAll();toast('已删除');
+  });
+}
+
+/* ==================== 渠道管理 ==================== */
+function addChannel(){
+  openModal('添加渠道','<div class="field"><label>渠道名称</label><input id="f_ch" placeholder="如：建设银行 / 黄金" maxlength="12"></div>',
+    '<button class="btn btn-ghost btn-sm" onclick="closeModal()">取消</button><button class="btn btn-primary btn-sm" id="saveCh">添加</button>');
+  document.getElementById('saveCh').onclick=()=>{
+    const v=document.getElementById('f_ch').value.trim();
+    if(!v){toast('请输入渠道名称');return;}
+    if(state.channels.includes(v)){toast('该渠道已存在');return;}
+    state.channels.push(v);saveState();closeModal();refreshAll();toast('已添加渠道：'+v);
+  };
+}
+function removeChannel(c){
+  showConfirm('删除渠道「'+esc(c)+'」？各月记录中该渠道的金额也会一并移除。',()=>{
+    state.channels=state.channels.filter(x=>x!==c);
+    state.snapshots.forEach(s=>{delete s.values[c];});
+    saveState();refreshAll();toast('已删除渠道');
+  });
+}
+
+/* ==================== 投资 CRUD ==================== */
+function invForm(v){
+  const isEdit=!!v;const c=v||{name:'',channel:'',investAmount:'',investDate:'',redeemAmount:'',redeemDate:'',status:'holding',note:''};
+  let f='<div class="grid2">'+
+    '<div class="field"><label>项目名称</label><input id="f_name" list="invNames" value="'+esc(c.name)+'" placeholder="如：黄金 / 债基"><datalist id="invNames"><option value="黄金"><option value="债基"></datalist></div>'+
+    '<div class="field"><label>渠道</label><input id="f_channel" value="'+esc(c.channel)+'" placeholder="如：支付宝" list="chList"><datalist id="chList">'+state.channels.map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist></div>'+
+    '</div><div class="grid2">'+
+    '<div class="field"><label>投入金额（元）</label><input type="number" inputmode="decimal" step="0.01" min="0" id="f_ia" value="'+c.investAmount+'" placeholder="0.00"></div>'+
+    '<div class="field"><label>投入时间</label><input type="date" id="f_id" value="'+esc(c.investDate)+'"></div>'+
+    '</div>'+
+    '<div class="field"><label>状态</label><select id="f_status" onchange="toggleRedeem()"><option value="holding"'+(c.status==='holding'?' selected':'')+'>持有中</option><option value="redeemed"'+(c.status==='redeemed'?' selected':'')+'>已赎回</option></select></div>'+
+    '<div class="grid2" id="redeemFields" style="'+(c.status==='redeemed'?'':'display:none')+'">'+
+    '<div class="field"><label>赎回金额（元）</label><input type="number" inputmode="decimal" step="0.01" min="0" id="f_ra" value="'+c.redeemAmount+'" placeholder="0.00"></div>'+
+    '<div class="field"><label>赎回时间</label><input type="date" id="f_rd" value="'+esc(c.redeemDate)+'"></div>'+
+    '</div>'+
+    '<div class="field"><label>备注（选填）</label><textarea id="f_inote" placeholder="选填">'+esc(c.note)+'</textarea></div>';
+  openModal(isEdit?'编辑投资':'记一笔投资',f,
+    '<button class="btn btn-ghost btn-sm" onclick="closeModal()">取消</button><button class="btn btn-primary btn-sm" id="saveInv">保存</button>');
+  document.getElementById('saveInv').onclick=()=>saveInv(v);
+}
+function toggleRedeem(){document.getElementById('redeemFields').style.display=document.getElementById('f_status').value==='redeemed'?'':'none';}
+function addInv(){invForm(null);}
+function editInv(id){const v=state.investments.find(x=>x.id===id);if(v)invForm(v);}
+function saveInv(origin){
+  const name=document.getElementById('f_name').value.trim();
+  if(!name){toast('请输入项目名称');return;}
+  const ia=Number(document.getElementById('f_ia').value);
+  if(document.getElementById('f_ia').value.trim()===''||isNaN(ia)){toast('请输入投入金额');return;}
+  const status=document.getElementById('f_status').value;
+  const data={name:name,channel:document.getElementById('f_channel').value.trim(),investAmount:ia,
+    investDate:document.getElementById('f_id').value,status:status,
+    redeemAmount:status==='redeemed'?Number(document.getElementById('f_ra').value)||0:0,
+    redeemDate:status==='redeemed'?document.getElementById('f_rd').value:'',
+    note:document.getElementById('f_inote').value.trim()};
+  if(origin){Object.assign(origin,data);}
+  else state.investments.push(Object.assign({id:uid()},data));
+  state.isSample=false;saveState();closeModal();refreshAll();toast('投资记录已保存');
+}
+function delInv(id){
+  const v=state.investments.find(x=>x.id===id);if(!v)return;
+  showConfirm('确定删除「'+esc(v.name)+'」这笔投资记录吗？此操作不可恢复。',()=>{
+    state.investments=state.investments.filter(x=>x.id!==id);saveState();refreshAll();toast('已删除');
+  });
+}
+
+/* ==================== 导出 / 导入 / 清空 ==================== */
+function downloadFile(name,content,type){
+  const blob=new Blob([content],{type:type||'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function exportJson(){
+  downloadFile('资产记账本备份_'+today.toISOString().slice(0,10)+'.json',JSON.stringify(state,null,2),'application/json;charset=utf-8');
+  toast('JSON 备份已导出');
+}
+let pendingImport=null;
+function importJson(){document.getElementById('fileInput').value='';document.getElementById('fileInput').click();}
+function handleImportFile(e){
+  const f=e.target.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const s=JSON.parse(reader.result);
+      if(!s||!Array.isArray(s.snapshots)||!Array.isArray(s.investments)||!Array.isArray(s.channels))throw 0;
+      pendingImport=s;
+      const body='<div class="confirm-txt">读到备份文件：<b>'+s.snapshots.length+' 条资产记录、'+s.investments.length+' 条投资记录</b>。<br><br>'+
+        '选择导入方式：<br>• <b>合并</b>：保留现有数据，只补充没有的记录（推荐两设备间搬家用）<br>• <b>覆盖</b>：清空现有数据，完全用备份替换</div>';
+      openModal('导入数据',body,
+        '<button class="btn btn-ghost btn-sm" onclick="closeModal()">取消</button>'+
+        '<button class="btn btn-ghost btn-sm" id="doOverwrite">覆盖</button>'+
+        '<button class="btn btn-primary btn-sm" id="doMerge">合并导入</button>');
+      document.getElementById('doMerge').onclick=doMergeImport;
+      document.getElementById('doOverwrite').onclick=doOverwriteImport;
+    }catch(err){toast('文件格式不正确，导入失败');}
+  };
+  reader.readAsText(f);
+}
+function doOverwriteImport(){
+  if(!pendingImport)return;
+  showConfirm('确定用备份覆盖当前全部数据吗？当前数据将被替换且不可恢复。',()=>{
+    state={channels:pendingImport.channels,snapshots:pendingImport.snapshots,investments:pendingImport.investments,isSample:false};
+    pendingImport=null;saveState();refreshAll();toast('已覆盖导入');
+  });
+}
+function doMergeImport(){
+  if(!pendingImport)return;
+  const s=pendingImport;
+  // 渠道：并集
+  s.channels.forEach(c=>{if(!state.channels.includes(c))state.channels.push(c);});
+  // 资产记录：按月份去重，备份里同月份的金额补齐到本地（保留本地已有月份的值，备份补充缺失月份）
+  s.snapshots.forEach(snap=>{
+    const exist=state.snapshots.find(x=>x.month===snap.month);
+    if(!exist){state.snapshots.push(snap);}
+    else{
+      // 同月份：备份里有、本地没有的渠道金额补进来
+      for(const k in snap.values){if(exist.values[k]===undefined)exist.values[k]=snap.values[k];}
+    }
+  });
+  // 投资记录：按 id 去重；无 id 的用 名称+投入日期+金额 作为指纹去重
+  s.investments.forEach(inv=>{
+    const dup=state.investments.some(x=>
+      (inv.id&&x.id===inv.id)||
+      (!inv.id&&x.name===inv.name&&x.investDate===inv.investDate&&Number(x.investAmount)===Number(inv.investAmount))
+    );
+    if(!dup)state.investments.push(Object.assign({id:uid()},inv));
+  });
+  const addN=s.snapshots.length+s.investments.length;
+  pendingImport=null;state.isSample=false;saveState();refreshAll();
+  toast('合并完成，已补充 '+addN+' 条备份记录');
+}
+function csvCell(v){const s=String(v==null?'':v);return '"'+s.replace(/"/g,'""')+'"';}
+function exportSnapCsv(){
+  const chs=state.channels;
+  const head=['月份'].concat(chs,['总资产','备注']);
+  const rows=[head.map(csvCell).join(',')];
+  sortedSnaps().forEach(s=>{
+    rows.push([monthLabel(s.month)].concat(chs.map(c=>s.values[c]==null?'':s.values[c]),[snapTotal(s),s.note||'']).map(csvCell).join(','));
+  });
+  downloadFile('资产台账_'+today.toISOString().slice(0,10)+'.csv','\ufeff'+rows.join('\r\n'),'text/csv;charset=utf-8');
+  toast('资产台账 CSV 已导出');
+}
+function exportInvCsv(){
+  const head=['项目名称','渠道','投入金额','投入时间','赎回金额','赎回时间','收益','状态','备注'];
+  const rows=[head.map(csvCell).join(',')];
+  state.investments.forEach(v=>{
+    const p=investProfit(v);
+    rows.push([v.name,v.channel||'',v.investAmount,v.investDate,v.status==='redeemed'?v.redeemAmount:'',v.redeemDate||'',p===null?'':p,v.status==='redeemed'?'已赎回':'持有中',v.note||''].map(csvCell).join(','));
+  });
+  downloadFile('投资明细_'+today.toISOString().slice(0,10)+'.csv','\ufeff'+rows.join('\r\n'),'text/csv;charset=utf-8');
+  toast('投资明细 CSV 已导出');
+}
+function exportAllCsv(){
+  exportSnapCsv();setTimeout(exportInvCsv,300);
+}
+function clearSample(){
+  showConfirm('清空示例数据？将删除全部资产记录与投资记录（渠道设置保留），确定继续吗？',()=>{
+    state.snapshots=[];state.investments=[];state.isSample=false;saveState();refreshAll();toast('示例数据已清空');
+  });
+}
+function clearAll(){
+  showConfirm('⚠️ 清空全部数据？包括资产记录、投资记录和自定义渠道，且不可恢复。建议先导出备份。确定继续吗？',()=>{
+    state={channels:DEFAULT_CHANNELS.slice(),snapshots:[],investments:[],isSample:false};
+    saveState();refreshAll();toast('已清空全部数据');
+  });
+}
+
+/* ==================== 绑定静态按钮文案与事件 ==================== */
+function initUI(){
+  document.getElementById('brandIco').innerHTML=icon('wallet',22);
+  document.getElementById('localNoteIco').innerHTML=icon('check',16);
+  document.getElementById('btnExportJson').innerHTML=icon('download',15)+' 导出备份';
+  document.getElementById('btnImportJson').innerHTML=icon('upload',15)+' 导入恢复';
+  document.getElementById('btnExportJson2').innerHTML=icon('download',15)+' 导出 JSON 备份';
+  document.getElementById('btnImportJson2').innerHTML=icon('upload',15)+' 导入恢复';
+  document.getElementById('btnExportAllCsv').innerHTML=icon('download',15)+' 导出全部清单 CSV';
+  document.getElementById('btnClearSample').innerHTML=icon('trash',15)+' 清空示例数据';
+  document.getElementById('btnClearAll').innerHTML=icon('close',15)+' 清空全部';
+  document.getElementById('btnExportSnapCsv').innerHTML=icon('download',15)+' 导出 CSV';
+  document.getElementById('btnExportInvCsv').innerHTML=icon('download',15)+' 导出 CSV';
+  document.getElementById('btnAddSnap').innerHTML=icon('plus',15)+' 记一笔';
+  document.getElementById('btnAddInv').innerHTML=icon('plus',15)+' 记一笔投资';
+  document.getElementById('tabSnapBtn').innerHTML=icon('wallet',16)+' 资产台账';
+  document.getElementById('tabInvBtn').innerHTML=icon('invest',16)+' 投资明细';
+
+  document.getElementById('btnExportJson').onclick=exportJson;
+  document.getElementById('btnExportJson2').onclick=exportJson;
+  document.getElementById('btnImportJson').onclick=importJson;
+  document.getElementById('btnImportJson2').onclick=importJson;
+  document.getElementById('btnExportSnapCsv').onclick=exportSnapCsv;
+  document.getElementById('btnExportInvCsv').onclick=exportInvCsv;
+  document.getElementById('btnExportAllCsv').onclick=exportAllCsv;
+  document.getElementById('btnClearSample').onclick=clearSample;
+  document.getElementById('btnClearAll').onclick=clearAll;
+  document.getElementById('btnAddSnap').onclick=addSnap;
+  document.getElementById('btnAddInv').onclick=addInv;
+  document.getElementById('fileInput').onchange=handleImportFile;
+  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchTab(t.getAttribute('data-tab')));
+}
+
+/* ==================== 初始化（防御性：固定顺序） ==================== */
+document.addEventListener('DOMContentLoaded',function(){
+  // 仅在 iPhone/iPad 的 Safari（非主屏幕模式）显示"添加到主屏幕"引导
+  const ua=navigator.userAgent;
+  const isIOS=/iPad|iPhone|iPod/.test(ua);
+  const isSafari=/Safari/.test(ua)&&!/CriOS|FxiOS|Chrome|Edg/.test(ua);
+  const standalone=window.navigator.standalone===true;
+  if(isIOS&&isSafari&&!standalone)document.body.classList.add('is-ios-safari');
+  initUI();
+  refreshAll();
+});
+</script>
+</body>
+</html>
