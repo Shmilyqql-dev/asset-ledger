@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="资产记账本">
+<meta name="theme-color" content="#2563EB">
+<title>设置 · 资产记账本</title>
+<style>
+  :root{
+    --primary:#2563EB; --primary-d:#1D4ED8;
+    --ink:#1E3A5F; --ink2:#5B7DA6; --ink3:#94A3B8;
+    --up:#DC2626; --down:#15803D;
+    --line:rgba(37,99,235,.12);
+    --glass:rgba(255,255,255,.55);
+    --glass-strong:rgba(255,255,255,.78);
+    --stroke:rgba(255,255,255,.85);
+    --bad:#DC2626; --bad-bg:rgba(254,226,226,.8);
+    --warn:#B45309; --warn-bg:rgba(254,243,199,.8);
+    --ok:#15803D; --ok-bg:rgba(220,252,231,.8);
+    --info:#2563EB; --info-bg:rgba(219,234,254,.8);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:linear-gradient(135deg,#DCE8F7,#EDF2FA,#D6E4F5);
+    background-attachment:fixed;min-height:100vh;color:var(--ink);font-size:13px;line-height:1.5;
+    padding-bottom:calc(88px + env(safe-area-inset-bottom));
+  }
+  .app{max-width:1080px;margin:0 auto;padding:20px 16px 0}
+  .glass{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--stroke);border-radius:17px;box-shadow:0 6px 22px rgba(37,99,235,.07);}
+  /* 顶栏 */
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+  .brand .icobox{width:40px;height:40px;border-radius:12px;background:#EBF1FF;display:flex;align-items:center;justify-content:center;color:var(--primary)}
+  .brand h1{font-size:17px;font-weight:800;color:#1E3A8A;letter-spacing:.3px}
+  .brand p{font-size:11px;color:var(--ink2);margin-top:1px}
+  .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+  /* 按钮 */
+  button{font-family:inherit;font-size:13px;cursor:pointer;border:none;background:none;color:inherit}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 15px;border-radius:12px;font-weight:600;transition:.15s;white-space:nowrap}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover{background:var(--primary-d)}
+  .btn-ghost{background:var(--glass-strong);border:1px solid var(--stroke);color:var(--primary)}
+  .btn-ghost:hover{background:#fff}
+  .btn-danger{background:var(--glass-strong);border:1px solid rgba(220,38,38,.35);color:var(--bad)}
+  .btn-danger:hover{background:rgba(220,38,38,.08)}
+  .btn-sm{min-height:38px;padding:0 11px;font-size:12px;border-radius:10px}
+  .icon-btn{width:34px;height:34px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink3);transition:.15s}
+  .icon-btn:hover{background:rgba(37,99,235,.1);color:var(--primary)}
+  .icon-btn.del:hover{background:rgba(220,38,38,.1);color:var(--bad)}
+  /* 区块 */
+  .todo{padding:16px 18px;margin-bottom:14px;border-left:4px solid var(--primary)}
+  .sec-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:var(--ink);margin-bottom:12px}
+  .sec-title .dot{width:7px;height:7px;border-radius:50%;background:var(--primary)}
+  .todo-list{display:flex;flex-direction:column;gap:9px}
+  .todo-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;background:var(--glass-strong)}
+  .todo-item .badge{flex:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9px}
+  .badge.bad{color:var(--bad);background:var(--bad-bg)}
+  .badge.warn{color:var(--warn);background:var(--warn-bg)}
+  .badge.info{color:var(--info);background:var(--info-bg)}
+  .todo-item .txt{flex:1;min-width:0}
+  .todo-item .txt b{color:var(--ink)}
+  .todo-item .txt small{display:block;color:var(--ink2);font-size:11px;margin-top:1px}
+  .empty-ok{display:flex;align-items:center;gap:8px;color:var(--ok);font-size:13px;font-weight:600;padding:6px 2px}
+  /* 统计卡 */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:14px}
+  .stat{padding:15px 16px;position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary)}
+  .stat.c2::before{background:#0891B2}.stat.c3::before{background:#4F46E5}.stat.c4::before{background:#64748B}
+  .stat .lab{font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:6px;margin-bottom:7px}
+  .stat .num{font-size:28px;font-weight:800;color:#172554;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .stat .sub{font-size:11px;color:var(--ink3);margin-top:6px}
+  .stat .num.up{color:var(--up)}.stat .num.down{color:var(--down)}
+  /* 面板 */
+  .panel{padding:17px 18px;margin-bottom:14px}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .panel-head h2{font-size:14px;font-weight:800;color:var(--ink)}
+  .panel-head .hint{font-size:11px;color:var(--ink3);font-weight:400;margin-top:2px}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+  /* 渠道 */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 6px 6px 11px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--stroke);font-size:12px;color:var(--ink);font-weight:600}
+  .chip .x{width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink3);cursor:pointer}
+  .chip .x:hover{background:rgba(220,38,38,.12);color:var(--bad)}
+  .chip-add{display:inline-flex;align-items:center;gap:5px;padding:7px 11px;border-radius:10px;border:1px dashed var(--primary);color:var(--primary);font-size:12px;font-weight:600;cursor:pointer;background:transparent}
+  .chip-add:hover{background:#EBF1FF}
+  /* 图表 */
+  .chart-wrap{width:100%;overflow:hidden}
+  .chart-wrap svg{width:100%;height:auto;display:block}
+  /* 表格 */
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:560px}
+  th,td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{font-size:12px;color:var(--ink2);font-weight:700;background:rgba(255,255,255,.35)}
+  tbody tr:nth-child(even){background:rgba(255,255,255,.12)}
+  tbody tr:hover{background:rgba(219,234,254,.45)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9px}
+  .tag.hold{color:var(--warn);background:var(--warn-bg)}
+  .tag.done{color:var(--ok);background:var(--ok-bg)}
+  .val-up{color:var(--up)}.val-down{color:var(--down)}.val-flat{color:var(--ink2)}
+  /* 备份 */
+  .backup{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .tip{font-size:11px;color:var(--ink2);margin-top:10px;line-height:1.6}
+  .notice{font-size:11.5px;padding:10px 13px;border-radius:10px;margin-bottom:13px;line-height:1.65}
+  /* 空状态 */
+  .empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:34px 10px;color:var(--ink3)}
+  .empty span{font-size:12px}
+  /* 模态框 */
+  .mask{position:fixed;inset:0;background:rgba(30,58,95,.32);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:90}
+  .modal{background:rgba(255,255,255,.97);border:1px solid var(--stroke);border-radius:18px;width:100%;max-width:520px;max-height:88vh;overflow:auto;box-shadow:0 20px 60px rgba(30,58,95,.25)}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .modal-head h3{font-size:15px;font-weight:800;color:#1E3A8A}
+  .modal-body{padding:18px 20px}
+  .modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:14px 20px;border-top:1px solid var(--line)}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;color:var(--ink2);font-weight:600;margin-bottom:6px}
+  .field input,.field select,.field textarea{width:100%;font-size:16px;font-family:inherit;color:var(--ink);
+    padding:10px 12px;min-height:44px;border:1px solid var(--stroke);border-radius:12px;background:var(--glass-strong);outline:none;transition:.15s;}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .field textarea{resize:vertical;min-height:64px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .confirm-txt{font-size:14px;color:var(--ink);line-height:1.7;padding:6px 0}
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);background:rgba(30,58,95,.94);color:#fff;
+    padding:11px 20px;border-radius:12px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:120;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* ============ 导航：PC 顶部 / 手机底部 ============ */
+  .nav{position:fixed;left:0;right:0;z-index:60;display:flex;background:rgba(255,255,255,.82);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--line)}
+  .nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    text-decoration:none;color:var(--ink2);font-size:11px;font-weight:600;padding:9px 2px;transition:.15s;position:relative}
+  .nav a .ni{display:flex;align-items:center;justify-content:center}
+  .nav a.active{color:var(--primary);font-weight:800}
+  .nav a.active::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:26px;height:3px;border-radius:0 0 3px 3px;background:var(--primary)}
+  /* 手机：底部固定 */
+  .nav{bottom:0;padding-bottom:env(safe-area-inset-bottom);border-radius:0}
+  .nav a{min-height:56px}
+  /* 桌面：吸顶横排 */
+  @media(min-width:769px){
+    body{padding-bottom:24px;padding-top:0}
+    .app{padding-top:14px}
+    .nav{top:0;bottom:auto;padding-bottom:0;border-top:none;border-bottom:1px solid var(--line);
+      justify-content:center;gap:6px;border-radius:0}
+    .nav a{flex:0 0 auto;flex-direction:row;gap:7px;font-size:13px;padding:13px 20px;min-height:52px}
+    .nav a.active::before{top:auto;bottom:0;width:100%;height:2.5px;border-radius:3px 3px 0 0}
+    .app{margin-top:52px}
+    .toast{bottom:34px}
+  }
+  /* 响应式 */
+  @media(max-width:820px){.stats{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){
+    .app{padding:14px 12px 0}
+    .topbar{padding:14px}
+    .brand h1{font-size:16px}
+    .stats{gap:10px}
+    .stat{padding:13px 12px}
+    .stat .num{font-size:19px;letter-spacing:-1px}
+    .todo-item{flex-wrap:wrap}
+    .todo-item .btn{margin-left:auto;flex-shrink:0}
+    .panel{padding:14px}
+    .grid2{grid-template-columns:1fr;gap:0}
+  }
+  /* iPhone 添加到主屏幕引导 */
+  .ios-tip{display:none;padding:13px 15px;margin-bottom:14px;border-left:4px solid #0891B2;line-height:1.7}
+  .ios-tip b{color:#1E3A8A}
+  .ios-tip .steps{font-size:12px;color:var(--ink);margin-top:5px}
+  body.is-ios-safari .ios-tip{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="glass topbar">
+    <div class="brand">
+      <div class="icobox" id="brandIco"></div>
+      <div><h1>设置</h1><p>数据备份 · 恢复 · 清理</p></div>
+    </div>
+  </div>
+
+  <div class="glass panel">
+    <div class="panel-head"><div><h2>数据存放位置</h2><div class="hint">关于你的数据在哪里、安不安全</div></div></div>
+    <div class="notice" style="color:var(--ok);background:var(--ok-bg);display:flex;align-items:flex-start;gap:8px">
+      <span id="localNoteIco" style="flex:none;margin-top:1px"></span>
+      <span>你的资产数据<b>只保存在这台设备的浏览器里</b>，不会上传到任何服务器。别人就算拿到同一个网址，打开的也是他自己的空白账本，看不到你的一个数字。</span>
+    </div>
+    <div class="notice" style="color:var(--warn);background:var(--warn-bg)">
+      注意：清理浏览器数据 / 换设备 / 无痕模式关闭后会丢失，请养成每月导出一次 JSON 备份的习惯。
+    </div>
+    <div class="table-wrap">
+      <table style="min-width:auto"><tbody id="statRows"></tbody></table>
+    </div>
+  </div>
+
+  <div class="glass panel">
+    <div class="panel-head"><div><h2>备份与恢复</h2><div class="hint">换设备、多设备数据合并都靠这里</div></div></div>
+    <div class="backup">
+      <button class="btn btn-primary btn-sm" id="btnExportJson"></button>
+      <button class="btn btn-ghost btn-sm" id="btnImportJson"></button>
+      <button class="btn btn-ghost btn-sm" id="btnExportAllCsv"></button>
+    </div>
+    <div class="tip">导出 JSON 是完整备份（资产 + 投资 + 渠道设置）。导入时可选「合并」或「覆盖」：合并只补缺失记录，适合电脑手机两边合并；覆盖会完全替换当前数据。</div>
+  </div>
+
+  <div class="glass panel">
+    <div class="panel-head"><div><h2>危险操作</h2><div class="hint">清空后不可恢复，务必先备份</div></div></div>
+    <div class="backup">
+      <button class="btn btn-danger btn-sm" id="btnClearSample"></button>
+      <button class="btn btn-danger btn-sm" id="btnClearAll"></button>
+    </div>
+  </div>
+
+  <div class="glass panel">
+    <div class="panel-head"><div><h2>关于</h2></div></div>
+    <div class="tip" style="line-height:1.9">
+      资产记账本 · 本地优先的单页应用<br>
+      数据存储：浏览器 localStorage（不上传）<br>
+      页面来源：GitHub Pages 静态托管<br>
+      备份格式：JSON（完整）/ CSV（可用 Excel 打开）
+    </div>
+  </div>
+
+</div>
+<nav class="nav"><a href="index.html" class=""><span class="ni"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 21v-7h6v7"/></svg></span><span>首页</span></a><a href="assets.html" class=""><span class="ni"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V6"/><path d="M16 12h.01"/></svg></span><span>资产</span></a><a href="invest.html" class=""><span class="ni"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 9 11l4 4 8-8"/><path d="M15 3h6v6"/></svg></span><span>投资</span></a><a href="settings.html" class="active"><span class="ni"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21h-4v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></span><span>设置</span></a></nav>
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+<script>
+/* ==================== 图标字典（全站统一线性 SVG） ==================== */
+const ICONS = {
+  home:'<path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 21v-7h6v7"/>',
+  wallet:'<path d="M20 7V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V6"/><path d="M16 12h.01"/>',
+  invest:'<path d="M3 17 9 11l4 4 8-8"/><path d="M15 3h6v6"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21h-4v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
+  chart:'<path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  trash:'<path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>',
+  download:'<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 20h16"/>',
+  upload:'<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/>',
+  close:'<path d="M18 6 6 18M6 6l12 12"/>',
+  check:'<path d="m5 12 5 5L20 7"/>',
+  coin:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h4a2 2 0 0 1 0 4H9M9 12h5"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>'
+};
+function icon(n,s){s=s||18;return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[n]||'')+'</svg>';}
+
+/* ==================== 常量与工具 ==================== */
+const KEY='wb_zjben_state_v1';
+const DEFAULT_CHANNELS=['国债','银行账户','股票','支付宝','微信','债基'];
+const today=new Date();
+const CUR_MONTH=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+
+function uid(){return 'id_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);}
+function fmtMoney(n){if(n===null||n===undefined||isNaN(n))return '—';return '¥'+Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtWan(n){if(n===null||n===undefined||isNaN(n))return '—';if(Math.abs(n)>=10000)return (n/10000).toFixed(1)+'万';return Number(n).toLocaleString('zh-CN');}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function monthLabel(m){if(!m)return '';const p=m.split('-');return p[0]+'年'+Number(p[1])+'月';}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},2200);}
+
+/* ==================== 数据层 ==================== */
+function seedState(){
+  return {
+    channels:DEFAULT_CHANNELS.slice(),
+    snapshots:[
+      {id:uid(),month:'2026-08',note:'',values:{'国债':300000,'银行账户':150000,'股票':80000,'支付宝':20000,'微信':8000,'债基':100000}},
+      {id:uid(),month:'2026-09',note:'',values:{'国债':300000,'银行账户':155000,'股票':85000,'支付宝':22000,'微信':9000,'债基':105000}},
+      {id:uid(),month:'2026-10',note:'',values:{'国债':300000,'银行账户':160000,'股票':92000,'支付宝':21000,'微信':7500,'债基':110000}}
+    ],
+    investments:[
+      {id:uid(),name:'黄金',channel:'支付宝',investAmount:50000,investDate:'2026-03-15',redeemAmount:0,redeemDate:'',status:'holding',note:'积存金，长期持有'},
+      {id:uid(),name:'债基A',channel:'银行账户',investAmount:100000,investDate:'2025-11-01',redeemAmount:106800,redeemDate:'2026-09-20',status:'redeemed',note:''},
+      {id:uid(),name:'债基B',channel:'支付宝',investAmount:80000,investDate:'2026-06-10',redeemAmount:0,redeemDate:'',status:'holding',note:''}
+    ],
+    isSample:true
+  };
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){const s=JSON.parse(raw);if(s&&Array.isArray(s.snapshots)&&Array.isArray(s.investments)&&Array.isArray(s.channels))return s;}
+  }catch(e){}
+  const s=seedState();localStorage.setItem(KEY,JSON.stringify(s));return s;
+}
+function saveState(){localStorage.setItem(KEY,JSON.stringify(state));}
+let state=loadState();
+
+/* ==================== 计算层 ==================== */
+function snapTotal(s){let t=0;for(const k in s.values){const v=Number(s.values[k]);if(!isNaN(v))t+=v;}return t;}
+function sortedSnaps(){return state.snapshots.slice().sort(function(a,b){return a.month.localeCompare(b.month);});}
+function latestSnap(){const a=sortedSnaps();return a.length?a[a.length-1]:null;}
+function prevSnap(){const a=sortedSnaps();return a.length>1?a[a.length-2]:null;}
+function hasMonth(m){return state.snapshots.some(function(s){return s.month===m;});}
+function investProfit(inv){if(inv.status!=='redeemed')return null;return (Number(inv.redeemAmount)||0)-(Number(inv.investAmount)||0);}
+function realizedProfit(){let t=0;state.investments.forEach(function(i){const p=investProfit(i);if(p!==null)t+=p;});return t;}
+function holdingCount(){return state.investments.filter(function(i){return i.status==='holding';}).length;}
+
+/* ==================== 通用 UI ==================== */
+function closeModal(){document.getElementById('modalRoot').innerHTML='';}
+function openModal(title,bodyHtml,footHtml){
+  document.getElementById('modalRoot').innerHTML=
+    '<div class="mask" onclick="if(event.target===this)closeModal()"><div class="modal">'+
+    '<div class="modal-head"><h3>'+title+'</h3><button class="icon-btn" onclick="closeModal()">'+icon('close',18)+'</button></div>'+
+    '<div class="modal-body">'+bodyHtml+'</div>'+
+    '<div class="modal-foot">'+footHtml+'</div></div></div>';
+}
+function showConfirm(msg,onYes){
+  openModal('请确认','<div class="confirm-txt">'+msg+'</div>',
+    '<button class="btn btn-ghost btn-sm" onclick="closeModal()">取消</button>'+
+    '<button class="btn btn-danger btn-sm" id="confirmYes">确定</button>');
+  document.getElementById('confirmYes').onclick=function(){closeModal();onYes();};
+}
+function downloadFile(name,content,type){
+  const blob=new Blob([content],{type:type||'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+}
+function csvCell(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}
+function initIOS(){
+  const ua=navigator.userAgent;
+  const isIOS=/iPad|iPhone|iPod/.test(ua);
+  const isSafari=/Safari/.test(ua)&&!/CriOS|FxiOS|Chrome|Edg/.test(ua);
+  const standalone=window.navigator.standalone===true;
+  if(isIOS&&isSafari&&!standalone)document.body.classList.add('is-ios-safari');
+}
+
+/* ==================== 设置页 ==================== */
+function renderStatsTable(){
+  const snapN=state.snapshots.length,invN=state.investments.length;
+  const latest=latestSnap();
+  const rows=[
+    ['资产记录',snapN+' 条'],
+    ['投资记录',invN+' 条'],
+    ['自定义渠道',state.channels.length+' 个'],
+    ['最新记录月份',latest?monthLabel(latest.month):'—'],
+    ['当前总资产',latest?fmtMoney(snapTotal(latest)):'—']
+  ];
+  document.getElementById('statRows').innerHTML=rows.map(function(r,i){
+    return '<tr><td style="color:#5B7DA6">'+r[0]+'</td><td class="num" style="color:#1E3A5F">'+esc(r[1])+'</td></tr>';
+  }).join('');
+}
+function exportJson(){
+  downloadFile('资产记账本备份_'+today.toISOString().slice(0,10)+'.json',JSON.stringify(state,null,2),'application/json;charset=utf-8');
+  toast('JSON 备份已导出');
+}
+function importJson(){document.getElementById('fileInput').value='';document.getElementById('fileInput').click();}
+let pendingImport=null;
+function handleImportFile(e){
+  const f=e.target.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=function(){
+    try{
+      const s=JSON.parse(reader.result);
+      if(!s||!Array.isArray(s.snapshots)||!Array.isArray(s.investments)||!Array.isArray(s.channels))throw 0;
+      pendingImport=s;
+      const body='<div class="confirm-txt">读到备份文件：<b>'+s.snapshots.length+' 条资产记录、'+s.investments.length+' 条投资记录</b>。<br><br>'+
+        '选择导入方式：<br>• <b>合并</b>：保留现有数据，只补充没有的记录（推荐两设备搬家用）<br>• <b>覆盖</b>：清空现有数据，完全用备份替换</div>';
+      openModal('导入数据',body,
+        '<button class="btn btn-ghost btn-sm" onclick="closeModal()">取消</button>'+
+        '<button class="btn btn-ghost btn-sm" id="doOverwrite">覆盖</button>'+
+        '<button class="btn btn-primary btn-sm" id="doMerge">合并导入</button>');
+      document.getElementById('doMerge').onclick=doMergeImport;
+      document.getElementById('doOverwrite').onclick=doOverwriteImport;
+    }catch(err){toast('文件格式不正确，导入失败');}
+  };
+  reader.readAsText(f);
+}
+function doOverwriteImport(){
+  if(!pendingImport)return;
+  showConfirm('确定用备份覆盖当前全部数据吗？当前数据将被替换且不可恢复。',function(){
+    state={channels:pendingImport.channels,snapshots:pendingImport.snapshots,investments:pendingImport.investments,isSample:false};
+    pendingImport=null;saveState();refreshAll();toast('已覆盖导入');
+  });
+}
+function doMergeImport(){
+  if(!pendingImport)return;
+  const s=pendingImport;let addSnap=0,addInv=0;
+  s.channels.forEach(function(c){if(!state.channels.includes(c))state.channels.push(c);});
+  s.snapshots.forEach(function(snap){
+    const exist=state.snapshots.find(function(x){return x.month===snap.month;});
+    if(!exist){state.snapshots.push(snap);addSnap++;}
+    else{for(const k in snap.values){if(exist.values[k]===undefined)exist.values[k]=snap.values[k];}}
+  });
+  s.investments.forEach(function(inv){
+    const dup=state.investments.some(function(x){
+      return (inv.id&&x.id===inv.id)||(!inv.id&&x.name===inv.name&&x.investDate===inv.investDate&&Number(x.investAmount)===Number(inv.investAmount));
+    });
+    if(!dup){state.investments.push(Object.assign({id:uid()},inv));addInv++;}
+  });
+  pendingImport=null;state.isSample=false;saveState();refreshAll();
+  toast('合并完成：新增 '+addSnap+' 个月资产、'+addInv+' 笔投资');
+}
+function exportSnapCsvOnly(){
+  const chs=state.channels,head=['月份'].concat(chs,['总资产','备注']),rows=[head.map(csvCell).join(',')];
+  sortedSnaps().forEach(function(s){
+    rows.push([monthLabel(s.month)].concat(chs.map(function(c){return s.values[c]==null?'':s.values[c];}),[snapTotal(s),s.note||'']).map(csvCell).join(','));
+  });
+  downloadFile('资产台账_'+today.toISOString().slice(0,10)+'.csv','\ufeff'+rows.join('\r\n'),'text/csv;charset=utf-8');
+}
+function exportInvCsvOnly(){
+  const head=['项目名称','渠道','投入金额','投入时间','赎回金额','赎回时间','收益','状态','备注'],rows=[head.map(csvCell).join(',')];
+  state.investments.forEach(function(v){
+    const p=investProfit(v);
+    rows.push([v.name,v.channel||'',v.investAmount,v.investDate,v.status==='redeemed'?v.redeemAmount:'',v.redeemDate||'',p===null?'':p,v.status==='redeemed'?'已赎回':'持有中',v.note||''].map(csvCell).join(','));
+  });
+  downloadFile('投资明细_'+today.toISOString().slice(0,10)+'.csv','\ufeff'+rows.join('\r\n'),'text/csv;charset=utf-8');
+}
+function exportAllCsv(){exportSnapCsvOnly();setTimeout(exportInvCsvOnly,300);toast('全部清单 CSV 已导出');}
+function clearSample(){
+  showConfirm('清空全部记录？将删除所有资产记录与投资记录（渠道设置保留），确定继续吗？',function(){
+    state.snapshots=[];state.investments=[];state.isSample=false;saveState();refreshAll();toast('记录已清空');
+  });
+}
+function clearAll(){
+  showConfirm('⚠️ 清空全部数据？包括资产记录、投资记录和自定义渠道，且不可恢复。建议先导出备份。确定继续吗？',function(){
+    state={channels:DEFAULT_CHANNELS.slice(),snapshots:[],investments:[],isSample:false};
+    saveState();refreshAll();toast('已清空全部数据');
+  });
+}
+function refreshAll(){renderStatsTable();}
+document.addEventListener('DOMContentLoaded',function(){
+  initIOS();
+  document.getElementById('brandIco').innerHTML=icon('gear',22);
+  document.getElementById('localNoteIco').innerHTML=icon('check',16);
+  document.getElementById('btnExportJson').innerHTML=icon('download',15)+' 导出 JSON 备份';
+  document.getElementById('btnImportJson').innerHTML=icon('upload',15)+' 导入恢复';
+  document.getElementById('btnExportAllCsv').innerHTML=icon('download',15)+' 导出全部清单 CSV';
+  document.getElementById('btnClearSample').innerHTML=icon('trash',15)+' 清空全部记录';
+  document.getElementById('btnClearAll').innerHTML=icon('close',15)+' 清空全部数据';
+  document.getElementById('btnExportJson').onclick=exportJson;
+  document.getElementById('btnImportJson').onclick=importJson;
+  document.getElementById('btnExportAllCsv').onclick=exportAllCsv;
+  document.getElementById('btnClearSample').onclick=clearSample;
+  document.getElementById('btnClearAll').onclick=clearAll;
+  document.getElementById('fileInput').onchange=handleImportFile;
+  refreshAll();
+});
+</script>
+</body>
+</html>
