@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-page-node-id="azEQ9S7MJr4mCG6CGCq2OU">
-<head data-page-node-id="NzJ6ARatCD0IIRsu6HDIH6">
-<meta charset="UTF-8" data-page-node-id="T4Gzl30giuVfp6oOSpRAan">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" data-page-node-id="5POxYa1BENe63dtVyxGegF">
-<meta name="apple-mobile-web-app-capable" content="yes" data-page-node-id="iCVgcjYM2FpJd9EWjBtlvA">
-<meta name="mobile-web-app-capable" content="yes" data-page-node-id="AhzI6OBgBrpNxhBXVmnptR">
-<meta name="apple-mobile-web-app-status-bar-style" content="default" data-page-node-id="7u3HBqtUgc297spemDgZIW">
-<meta name="apple-mobile-web-app-title" content="资产记账本" data-page-node-id="lv6pvnwFVLrFd51FfLrxDI">
-<meta name="theme-color" content="#2563EB" data-page-node-id="CrpMEA5VnsUtwfBaXiaqXb">
-<title>资产记账本 · 首页</title>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="资产记账本">
+<meta name="theme-color" content="#2563EB">
+<title>资产记账本 · 年度总览</title>
 <style>
   :root{
     --primary:#2563EB; --primary-d:#1D4ED8;
@@ -22,6 +22,7 @@
     --warn:#B45309; --warn-bg:rgba(254,243,199,.8);
     --ok:#15803D; --ok-bg:rgba(220,252,231,.8);
     --info:#2563EB; --info-bg:rgba(219,234,254,.8);
+    --cash:#0891B2; --cash-bg:rgba(207,250,254,.85);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{
@@ -39,7 +40,7 @@
   .brand .icobox{width:40px;height:40px;border-radius:12px;background:#EBF1FF;display:flex;align-items:center;justify-content:center;color:var(--primary)}
   .brand h1{font-size:17px;font-weight:800;color:#1E3A8A;letter-spacing:.3px}
   .brand p{font-size:11px;color:var(--ink2);margin-top:1px}
-  .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .top-actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
   /* 按钮 */
   button{font-family:inherit;font-size:13px;cursor:pointer;border:none;background:none;color:inherit}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 15px;border-radius:12px;font-weight:600;transition:.15s;white-space:nowrap}
@@ -53,6 +54,11 @@
   .icon-btn{width:34px;height:34px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink3);transition:.15s}
   .icon-btn:hover{background:rgba(37,99,235,.1);color:var(--primary)}
   .icon-btn.del:hover{background:rgba(220,38,38,.1);color:var(--bad)}
+  /* 工具栏 */
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;margin-bottom:14px}
+  .toolbar .grow{flex:1;min-width:0;font-size:12px;color:var(--ink2)}
+  select.mini{font-size:16px;padding:8px 10px;border-radius:10px;border:1px solid var(--stroke);
+    background:var(--glass-strong);color:var(--ink);min-height:44px;font-family:inherit;font-weight:700}
   /* 区块 */
   .todo{padding:16px 18px;margin-bottom:14px;border-left:4px solid var(--primary)}
   .sec-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:var(--ink);margin-bottom:12px}
@@ -63,6 +69,7 @@
   .badge.bad{color:var(--bad);background:var(--bad-bg)}
   .badge.warn{color:var(--warn);background:var(--warn-bg)}
   .badge.info{color:var(--info);background:var(--info-bg)}
+  .badge.ok{color:var(--ok);background:var(--ok-bg)}
   .todo-item .txt{flex:1;min-width:0}
   .todo-item .txt b{color:var(--ink)}
   .todo-item .txt small{display:block;color:var(--ink2);font-size:11px;margin-top:1px}
@@ -73,9 +80,9 @@
   .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary)}
   .stat.c2::before{background:#0891B2}.stat.c3::before{background:#4F46E5}.stat.c4::before{background:#64748B}
   .stat .lab{font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:6px;margin-bottom:7px}
-  .stat .num{font-size:28px;font-weight:800;color:#172554;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .stat .num{font-size:26px;font-weight:800;color:#172554;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.5px;word-break:break-all}
   .stat .sub{font-size:11px;color:var(--ink3);margin-top:6px}
-  .stat .num.up{color:var(--up)}.stat .num.down{color:var(--down)}
+  .stat .num.g{color:var(--ok)}.stat .num.r{color:var(--bad)}
   /* 面板 */
   .panel{padding:17px 18px;margin-bottom:14px}
   .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
@@ -84,14 +91,23 @@
   .row-actions{display:flex;gap:8px;flex-wrap:wrap}
   /* 渠道 */
   .chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 6px 6px 11px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--stroke);font-size:12px;color:var(--ink);font-weight:600}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:5px 5px 5px 10px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--stroke);font-size:12px;color:var(--ink);font-weight:600}
+  .chip .kind{font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;cursor:pointer;user-select:none}
+  .chip .kind.cash{color:var(--cash);background:var(--cash-bg)}
+  .chip .kind.inv{color:var(--warn);background:var(--warn-bg)}
   .chip .x{width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink3);cursor:pointer}
   .chip .x:hover{background:rgba(220,38,38,.12);color:var(--bad)}
   .chip-add{display:inline-flex;align-items:center;gap:5px;padding:7px 11px;border-radius:10px;border:1px dashed var(--primary);color:var(--primary);font-size:12px;font-weight:600;cursor:pointer;background:transparent}
   .chip-add:hover{background:#EBF1FF}
+  .mini-tag{font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px}
+  .mini-tag.cash{color:var(--cash);background:var(--cash-bg)}
+  .mini-tag.inv{color:var(--warn);background:var(--warn-bg)}
   /* 图表 */
   .chart-wrap{width:100%;overflow:hidden}
-  .chart-wrap svg{width:100%;height:auto;display:block}
+  .chart-wrap>svg{width:100%;height:auto;display:block}
+  .empty svg{width:24px;height:24px;flex:none}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink2);margin-top:6px;justify-content:center}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   /* 表格 */
   .table-wrap{overflow-x:auto}
   table{width:100%;border-collapse:collapse;min-width:560px}
@@ -100,10 +116,21 @@
   tbody tr:nth-child(even){background:rgba(255,255,255,.12)}
   tbody tr:hover{background:rgba(219,234,254,.45)}
   td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  tfoot td{border-top:2px solid rgba(37,99,235,.25);border-bottom:none;background:rgba(219,234,254,.4);font-weight:800;color:#172554}
   .tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9px}
   .tag.hold{color:var(--warn);background:var(--warn-bg)}
   .tag.done{color:var(--ok);background:var(--ok-bg)}
+  .tag.base{color:var(--ink2);background:rgba(226,232,240,.85)}
   .val-up{color:var(--up)}.val-down{color:var(--down)}.val-flat{color:var(--ink2)}
+  .g{color:var(--ok)}.r{color:var(--bad)}.n{color:var(--ink2)}
+  /* 预览框 */
+  .preview{border-radius:12px;padding:12px 14px;background:rgba(219,234,254,.5);border:1px solid rgba(37,99,235,.16);margin-bottom:14px}
+  .preview .pv-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--ink2);padding:2.5px 0}
+  .preview .pv-row b{color:var(--ink);font-variant-numeric:tabular-nums;font-size:12.5px}
+  .preview .pv-main{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(37,99,235,.25)}
+  .preview .pv-main span{font-size:12px;color:var(--ink2);font-weight:700}
+  .preview .pv-main .pv-big{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .hintline{font-size:11.5px;color:var(--warn);background:var(--warn-bg);padding:8px 11px;border-radius:9px;margin-top:9px;line-height:1.6}
   /* 备份 */
   .backup{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
   .tip{font-size:11px;color:var(--ink2);margin-top:10px;line-height:1.6}
@@ -120,12 +147,14 @@
   .modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:14px 20px;border-top:1px solid var(--line)}
   .field{margin-bottom:14px}
   .field label{display:block;font-size:12px;color:var(--ink2);font-weight:600;margin-bottom:6px}
+  .field label .mini-tag{vertical-align:1px}
   .field input,.field select,.field textarea{width:100%;font-size:16px;font-family:inherit;color:var(--ink);
     padding:10px 12px;min-height:44px;border:1px solid var(--stroke);border-radius:12px;background:var(--glass-strong);outline:none;transition:.15s;}
   .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .modal .field input,.modal .field select,.modal .field textarea{background:#fff;border-color:rgba(37,99,235,.22)}
   .field textarea{resize:vertical;min-height:64px}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .confirm-txt{font-size:14px;color:var(--ink);line-height:1.7;padding:6px 0}
+  .confirm-txt{font-size:13.5px;color:var(--ink);line-height:1.75;padding:4px 0}
   /* Toast */
   .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);background:rgba(30,58,95,.94);color:#fff;
     padding:11px 20px;border-radius:12px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:120;box-shadow:0 8px 24px rgba(0,0,0,.2)}
@@ -161,11 +190,13 @@
     .brand h1{font-size:16px}
     .stats{gap:10px}
     .stat{padding:13px 12px}
-    .stat .num{font-size:19px;letter-spacing:-1px}
+    .stat .num{font-size:18px;letter-spacing:-.5px}
     .todo-item{flex-wrap:wrap}
     .todo-item .btn{margin-left:auto;flex-shrink:0}
     .panel{padding:14px}
     .grid2{grid-template-columns:1fr;gap:0}
+    .toolbar{padding:11px 13px}
+    .chart-wrap>svg text{font-size:15px}
   }
   /* iPhone 添加到主屏幕引导 */
   .ios-tip{display:none;padding:13px 15px;margin-bottom:14px;border-left:4px solid #0891B2;line-height:1.7}
@@ -174,54 +205,61 @@
   body.is-ios-safari .ios-tip{display:block}
 </style>
 </head>
-<body data-page-node-id="wjXlfEYlDUuxMWYW1xeMBH">
-<div class="app" data-page-node-id="Fb4RJvbJTHOv79R0MCuM9n">
+<body>
+<div class="app">
 
-  <div class="glass topbar" data-page-node-id="G49LWLe5G9iBkV0BfCF6S2">
-    <div class="brand" data-page-node-id="T7S8549lgKHBmzX5t6nCbJ">
-      <div class="icobox" id="brandIco" data-page-node-id="4Fhip1IL61hwTSZ0srXv5E"></div>
-      <div data-page-node-id="vAE43Tni0qSKfPfoxgpuw1"><h1 data-page-node-id="z6gJ2GxQbDae5F07Z10794">资产记账本</h1><p data-page-node-id="72cm1r0YTS6QIUm6fXlpWL">全渠道总资产 · 每月一记</p></div>
+  <div class="glass topbar">
+    <div class="brand">
+      <div class="icobox" id="brandIco"></div>
+      <div><h1>年度总览</h1><p>收入 · 日常支出 · 理财盈亏</p></div>
     </div>
-    <div class="top-actions" data-page-node-id="rM7J42kTAESVNcQIipWjsL">
-      <a class="btn btn-ghost btn-sm" href="assets.html" id="goAssets" data-page-node-id="sVU0z3VKSeOpO0vuWaOKVY"></a>
+    <div class="top-actions">
+      <a class="btn btn-primary btn-sm" href="assets.html" id="goAssets"></a>
     </div>
   </div>
 
-  <div class="glass ios-tip" data-page-node-id="IxU7gQeoluKW3jdtf4wYOR">
-    <div class="sec-title" data-page-node-id="sEXO2Aki4ngonyuiDmShWQ"><span class="dot" style="background:#0891B2" data-page-node-id="fDT3wKPMHxUJsbsLPoYyoN"></span>在苹果手机上当 App 用</div>
-    <div class="steps" data-page-node-id="St6Rg9q5AuEKnGeKC0RscW">点 Safari 底部 <b data-page-node-id="pkfx1ttR1N1sQHZCg4a4gO">分享按钮</b>（方框向上箭头）→ 下滑找 <b data-page-node-id="02xAFOJDg3Eyvefeid1F8w">「添加到主屏幕」</b> → 点<b data-page-node-id="UziXNH7b3GaFB3sEDGEwaW">添加</b>。桌面就多一个记账本图标，点开全屏使用。</div>
+  <div class="glass ios-tip">
+    <div class="sec-title"><span class="dot" style="background:#0891B2"></span>在苹果手机上当 App 用</div>
+    <div class="steps">点 Safari 底部 <b>分享按钮</b>（方框向上箭头）→ 下滑找 <b>「添加到主屏幕」</b> → 点<b>添加</b>。桌面就多一个记账本图标，点开全屏使用。</div>
   </div>
 
-  <div class="glass todo" id="todoCard" data-page-node-id="3DILG0uMo2MlDBiAT77ZAS">
-    <div class="sec-title" data-page-node-id="dhEfuznLZPQY2ypJYFdht5"><span class="dot" data-page-node-id="Ei9tEVFqiMwgGhuZy0Juxe"></span>今天要处理</div>
-    <div class="todo-list" id="todoList" data-page-node-id="EqYiCQHUj9520ZaDbeYltP"></div>
+  <div class="glass todo" id="todoCard">
+    <div class="sec-title"><span class="dot"></span>今天要处理</div>
+    <div class="todo-list" id="todoList"></div>
   </div>
 
-  <div class="stats" data-page-node-id="ZsvtMfUouH5zR0h3loFJ02">
-    <div class="glass stat c1" data-page-node-id="GzHxgnGy2Cx4AomWDFvtQE"><div class="lab" id="lab1" data-page-node-id="afFhq3DMOtVKe1zIVNdgcF"></div><div class="num" id="num1" data-page-node-id="gIeqNRuvKDswzlVT0ywkjM">—</div><div class="sub" id="sub1" data-page-node-id="pgb7fmlRmEjEML9Qp2jEZJ"></div></div>
-    <div class="glass stat c2" data-page-node-id="8bgHnvg7sZ1vzWFAPtWhJU"><div class="lab" id="lab2" data-page-node-id="c5CwbWCLPvsx93VSRIASkM"></div><div class="num" id="num2" data-page-node-id="MVP9I9GmP928SYlUkBpHtr">—</div><div class="sub" id="sub2" data-page-node-id="TwVtzKc1NJJ3BBHRxQXKsu"></div></div>
-    <div class="glass stat c3" data-page-node-id="QR9Nk2nwfs9FiVbUWaGR3G"><div class="lab" id="lab3" data-page-node-id="UwvMwae45UzzeXjhIQuoy9"></div><div class="num" id="num3" data-page-node-id="adjMagrC89fDgJaBz9xEoc">—</div><div class="sub" id="sub3" data-page-node-id="b6GgKXIvwbtAfsnr7LnTRU"></div></div>
-    <div class="glass stat c4" data-page-node-id="lDASRTPrBoccZgcn6lGYLV"><div class="lab" id="lab4" data-page-node-id="OVS0fQufqVDBp3sEyeQEXd"></div><div class="num" id="num4" data-page-node-id="CeXFTR0pohCUckaTyLVtFL">—</div><div class="sub" id="sub4" data-page-node-id="eUswh3oTU31KmiIqOv3qY5"></div></div>
+  <div class="glass toolbar">
+    <span style="font-size:12px;font-weight:700;color:var(--ink2)">统计年份</span>
+    <select class="mini" id="yearSel"></select>
+    <div class="grow" id="yearHint"></div>
   </div>
 
-  <div class="glass panel" data-page-node-id="HEaeRM2qb5sCTcQi92z1rl">
-    <div class="panel-head" data-page-node-id="1x0QuLP79xhEo15CDR5AH7"><div data-page-node-id="o3OSwiIp1v9C3CWULosZGC"><h2 data-page-node-id="oV43FtZFJ6K1zxIPCNMjWI">总资产变化趋势</h2><div class="hint" data-page-node-id="5jOljMIhPmuV620NKghDm4">近 6 次记录的总资产走势</div></div></div>
-    <div class="chart-wrap" id="chartWrap" data-page-node-id="4Z6VeikMxvJn7lSCJV8DAp"></div>
+  <div class="stats">
+    <div class="glass stat c1"><div class="lab" id="lab1"></div><div class="num" id="num1">—</div><div class="sub" id="sub1"></div></div>
+    <div class="glass stat c2"><div class="lab" id="lab2"></div><div class="num" id="num2">—</div><div class="sub" id="sub2"></div></div>
+    <div class="glass stat c3"><div class="lab" id="lab3"></div><div class="num" id="num3">—</div><div class="sub" id="sub3"></div></div>
+    <div class="glass stat c4"><div class="lab" id="lab4"></div><div class="num" id="num4">—</div><div class="sub" id="sub4"></div></div>
   </div>
 
-  <div class="glass panel" data-page-node-id="rDvOq7ZLVNaCdIsbkoKm5q">
-    <div class="panel-head" data-page-node-id="WVuYvArJlqMFaPrKZXJafv">
-      <div data-page-node-id="CAfWB9Spt9fjGZCKch3F4L"><h2 data-page-node-id="AiqN1oW2NjTKrnpFWnOiWu">最近记录</h2><div class="hint" data-page-node-id="v8FzuVo6xCVctuUVBobYDK">最新几个月的资产快照</div></div>
-      <a class="btn btn-ghost btn-sm" href="assets.html" id="seeAll" data-page-node-id="86L02vYSMuJoAEExcm8UBK">全部记录</a>
+  <div class="glass panel">
+    <div class="panel-head"><div><h2>月度收支走势</h2><div class="hint">柱：当月收入 / 日常支出　折线：期末总资产</div></div></div>
+    <div class="chart-wrap" id="trendWrap"></div>
+    <div class="legend" id="trendLegend"></div>
+  </div>
+
+  <div class="glass panel">
+    <div class="panel-head">
+      <div><h2>月度明细</h2><div class="hint" id="tableHint"></div></div>
+      <a class="btn btn-ghost btn-sm" href="assets.html">去记账</a>
     </div>
-    <div id="recentList" data-page-node-id="3oxSTFLShEGlLTkZjIKEWV"></div>
+    <div class="table-wrap" id="monthTableWrap"></div>
   </div>
 
 </div>
-<nav class="nav" data-page-node-id="fQngAT0akmv6kSYzJB9pQE"><a href="index.html" class="active" data-page-node-id="hpEZ9LhBHsHW4eZ8cOSHph"><span class="ni" data-page-node-id="5qCTOtpDGDVZajr6GNoaAp"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="krFWorymX4t3X4x7NsDXC2"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" data-page-node-id="zhuJyImojAKbWgGA7upaon"/><path d="M9 21v-7h6v7" data-page-node-id="5QzOAyA8Ao71XnlK3NhWP0"/></svg></span><span data-page-node-id="cxEEOnzcUPOQltR1aYhst9">首页</span></a><a href="assets.html" class="" data-page-node-id="MF20aMqzNSJxP7Amv0WECF"><span class="ni" data-page-node-id="YtEMQ1517YVZe0MLVrCvDC"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="4y9HvnIYGlvSp85Vv43PM3"><path d="M20 7V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V6" data-page-node-id="x9eixNmFrjrslDJfDW6GPc"/><path d="M16 12h.01" data-page-node-id="xGTkjCET8EVbopP4lgo2my"/></svg></span><span data-page-node-id="SVNFEROTQB4fu3oBchuk17">资产</span></a><a href="invest.html" class="" data-page-node-id="KR1R9T0AO6msLb9v04pRRy"><span class="ni" data-page-node-id="w3xmU0HZOvvhlHPpIBhGdE"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="PBHAGZyaipuhTDcJyaqGzk"><path d="M3 17 9 11l4 4 8-8" data-page-node-id="6nYJe2Efa5rH6XqhYqhwcM"/><path d="M15 3h6v6" data-page-node-id="egyQBZ1GYLzpZWdaMWHHuH"/></svg></span><span data-page-node-id="OtWMgNlV40ed3zgqO5ilqi">投资</span></a><a href="settings.html" class="" data-page-node-id="zw5bZ3645FPGmNPwenydYL"><span class="ni" data-page-node-id="26c2JphbMAzkmo45rlybxA"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="p6a6uTLpvdwQih89EeDLH9"><circle cx="12" cy="12" r="3" data-page-node-id="c1hc58KPsiz1gYugq7BHBg"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21h-4v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z" data-page-node-id="qHCvEd6Dyb1cU0FmDOCLBy"/></svg></span><span data-page-node-id="2g6Gam2Vu3DshoqrhovJ5D">设置</span></a></nav>
-<div id="modalRoot" data-page-node-id="GIjwi28iwpdBID3iATyoup"></div>
-<div class="toast" id="toast" data-page-node-id="Nempt6HxM4StuJ2GhhSv1Q"></div>
-<input type="file" id="fileInput" accept=".json,application/json" style="display:none" data-page-node-id="WGr8qGCW3sUgF1QxCbmEZ1">
+<nav class="nav"><a href="index.html" class="active"><span class="ni"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 21v-7h6v7"/></svg></span><span>首页</span></a><a href="assets.html" class=""><span class="ni"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V6"/><path d="M16 12h.01"/></svg></span><span>资产</span></a><a href="invest.html" class=""><span class="ni"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 9 11l4 4 8-8"/><path d="M15 3h6v6"/></svg></span><span>投资</span></a><a href="settings.html" class=""><span class="ni"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21h-4v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></span><span>设置</span></a></nav>
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept=".json,application/json" style="display:none">
 <script>
 /* ==================== 图标字典（全站统一线性 SVG） ==================== */
 const ICONS = {
@@ -231,6 +269,7 @@ const ICONS = {
   gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21h-4v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
   chart:'<path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
+  minus:'<path d="M5 12h14"/>',
   trash:'<path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
   edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>',
   download:'<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 20h16"/>',
@@ -238,58 +277,236 @@ const ICONS = {
   close:'<path d="M18 6 6 18M6 6l12 12"/>',
   check:'<path d="m5 12 5 5L20 7"/>',
   coin:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h4a2 2 0 0 1 0 4H9M9 12h5"/>',
-  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>'
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>',
+  redo:'<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>'
 };
 function icon(n,s){s=s||18;return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[n]||'')+'</svg>';}
 
 /* ==================== 常量与工具 ==================== */
-const KEY='wb_zjben_state_v1';
-const DEFAULT_CHANNELS=['国债','银行账户','股票','支付宝','微信','债基'];
+const KEY='wb_zjben_state_v1';   /* key 保持 v1 不变，内部用 version 字段标识数据结构 */
+const DEFAULT_CHANNELS=[
+  {name:'国债',isInvestment:true},
+  {name:'银行账户',isInvestment:false},
+  {name:'股票',isInvestment:true},
+  {name:'支付宝',isInvestment:false},
+  {name:'微信',isInvestment:false},
+  {name:'债基',isInvestment:true},
+  {name:'黄金',isInvestment:true}
+];
 const today=new Date();
 const CUR_MONTH=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
 
 function uid(){return 'id_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);}
+function num(v){if(v===null||v===undefined||v==='')return 0;const n=Number(v);return isNaN(n)?0:n;}
 function fmtMoney(n){if(n===null||n===undefined||isNaN(n))return '—';return '¥'+Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function fmtWan(n){if(n===null||n===undefined||isNaN(n))return '—';if(Math.abs(n)>=10000)return (n/10000).toFixed(1)+'万';return Number(n).toLocaleString('zh-CN');}
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-function monthLabel(m){if(!m)return '';const p=m.split('-');return p[0]+'年'+Number(p[1])+'月';}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},2200);}
-
-/* ==================== 数据层 ==================== */
-/* 严禁预置任何编造的资产金额：账本打开即为空，全部数据由本人自行录入 */
-function seedState(){
-  return {
-    channels:DEFAULT_CHANNELS.slice(),
-    snapshots:[],
-    investments:[],
-    isSample:false
-  };
+function fmtWan(n){if(n===null||n===undefined||isNaN(n))return '—';if(Math.abs(n)>=10000)return (n/10000).toFixed(1)+'万';return Number(n).toLocaleString('zh-CN',{maximumFractionDigits:0});}
+function fmtNum(n){if(n===null||n===undefined||isNaN(n))return '—';return Number(n).toLocaleString('zh-CN',{maximumFractionDigits:0});}
+function fmtSignedNum(n){if(n===null||n===undefined||isNaN(n))return '—';const s=fmtNum(Math.abs(n));return (n>0?'+':(n<0?'-':''))+s;}
+function fmtSigned(n){
+  if(n===null||n===undefined||isNaN(n))return '—';
+  const s=fmtMoney(Math.abs(n));
+  return (n>0?'+':(n<0?'-':''))+s;
 }
+function clsOf(n){return n>0?'g':(n<0?'r':'n');}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function monthLabel(m){if(!m)return '';const p=String(m).split('-');return p[0]+'年'+Number(p[1])+'月';}
+function monthShort(m){if(!m)return '';return Number(String(m).split('-')[1])+'月';}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},2400);}
+
+/* ==================== 数据层 v2 ==================== */
+/* 严禁预置任何编造的资产金额：账本打开即为空，全部数据由本人自行录入 */
+function chName(c){return typeof c==='string'?c:String((c&&c.name)||'');}
+function chIsInv(c){return typeof c==='string'?false:!!(c&&c.isInvestment);}
+
+function seedState(){
+  const chs=DEFAULT_CHANNELS.map(function(c){return {name:c.name,isInvestment:c.isInvestment};});
+  return {version:2,channels:chs,snapshots:[],investments:[],isSample:false};
+}
+
+/* 旧版名称推断：v1 渠道只是字符串，没有任何现金/理财标记。
+   按名称给个合理默认（可在资产页一键翻转），避免旧账本全部被当成现金。 */
+const INV_NAME_HINT=/债基|基金|股票|黄金|国债|理财|ETF|指数|信托|定投/;
+
+/* 兼容升级：v1（channels 为字符串数组、快照只有 values）→ v2 */
+function migrateState(raw){
+  if(!raw||typeof raw!=='object')return null;
+  const out={version:2,channels:[],snapshots:[],investments:[],isSample:false};
+  const seen={};
+  const srcCh=Array.isArray(raw.channels)?raw.channels:[];
+  srcCh.forEach(function(c){
+    let nm='',inv=false;
+    if(typeof c==='string'){nm=c;inv=INV_NAME_HINT.test(c);}
+    else if(c&&c.name){nm=String(c.name);inv=!!c.isInvestment;}
+    nm=nm.trim();
+    if(!nm||seen[nm])return;
+    seen[nm]=1;out.channels.push({name:nm,isInvestment:inv});
+  });
+  if(!out.channels.length)out.channels=seedState().channels;
+
+  const srcSnap=Array.isArray(raw.snapshots)?raw.snapshots:[];
+  srcSnap.forEach(function(s){
+    if(!s||!s.month)return;
+    const vals={};
+    if(s.values&&typeof s.values==='object'){
+      for(const k in s.values){const v=Number(s.values[k]);if(!isNaN(v))vals[k]=v;}
+    }
+    out.snapshots.push({
+      id:s.id||uid(),
+      month:String(s.month),
+      income:num(s.income),
+      investIn:num(s.investIn),
+      investOut:num(s.investOut),
+      values:vals,
+      note:s.note?String(s.note):'',
+      isCatchUp:!!s.isCatchUp
+    });
+  });
+
+  const srcInv=Array.isArray(raw.investments)?raw.investments:[];
+  srcInv.forEach(function(v){
+    if(!v)return;
+    out.investments.push({
+      id:v.id||uid(),
+      name:v.name?String(v.name):'未命名',
+      channel:v.channel?String(v.channel):'',
+      investAmount:num(v.investAmount),
+      investDate:v.investDate?String(v.investDate):'',
+      redeemAmount:num(v.redeemAmount),
+      redeemDate:v.redeemDate?String(v.redeemDate):'',
+      status:v.status==='redeemed'?'redeemed':'holding',
+      note:v.note?String(v.note):''
+    });
+  });
+
+  out.isSample=false;
+  return out;
+}
+
 function loadState(){
   try{
     const raw=localStorage.getItem(KEY);
     if(raw){
       const s=JSON.parse(raw);
       if(s&&Array.isArray(s.snapshots)&&Array.isArray(s.investments)&&Array.isArray(s.channels)){
-        if(s.isSample===true)return seedState();  // 丢弃旧版编造的示例数据，绝不再展示
-        return s;
+        if(s.isSample===true)return seedState();   /* 丢弃旧版编造的示例数据，绝不再展示 */
+        const m=migrateState(s);
+        if(m){localStorage.setItem(KEY,JSON.stringify(m));return m;}
       }
     }
   }catch(e){}
   const s=seedState();localStorage.setItem(KEY,JSON.stringify(s));return s;
 }
-function saveState(){localStorage.setItem(KEY,JSON.stringify(state));}
+function saveState(){state.version=2;localStorage.setItem(KEY,JSON.stringify(state));}
 let state=loadState();
 
 /* ==================== 计算层 ==================== */
-function snapTotal(s){let t=0;for(const k in s.values){const v=Number(s.values[k]);if(!isNaN(v))t+=v;}return t;}
+function valOf(s,name){
+  if(!s||!s.values)return 0;
+  const v=s.values[name];const n=Number(v);return isNaN(n)?0:n;
+}
+function isInvestChannel(name){
+  const c=state.channels.find(function(x){return chName(x)===name;});
+  return c?chIsInv(c):false;
+}
+/* 现金类渠道合计 */
+function cashTotal(s){
+  let t=0;state.channels.forEach(function(c){if(!chIsInv(c))t+=valOf(s,chName(c));});return t;
+}
+/* 理财类渠道市值合计 */
+function investValue(s){
+  let t=0;state.channels.forEach(function(c){if(chIsInv(c))t+=valOf(s,chName(c));});return t;
+}
+function snapTotal(s){return cashTotal(s)+investValue(s);}
 function sortedSnaps(){return state.snapshots.slice().sort(function(a,b){return a.month.localeCompare(b.month);});}
 function latestSnap(){const a=sortedSnaps();return a.length?a[a.length-1]:null;}
-function prevSnap(){const a=sortedSnaps();return a.length>1?a[a.length-2]:null;}
 function hasMonth(m){return state.snapshots.some(function(s){return s.month===m;});}
-function investProfit(inv){if(inv.status!=='redeemed')return null;return (Number(inv.redeemAmount)||0)-(Number(inv.investAmount)||0);}
+function monthIdx(m){const p=String(m).split('-');return Number(p[0])*12+(Number(p[1])-1);}
+function monthDiff(a,b){return monthIdx(b)-monthIdx(a);}
+/* 严格早于 month 的最近一条记录 */
+function prevSnapOf(month){
+  const arr=sortedSnaps().filter(function(s){return s.month<month;});
+  return arr.length?arr[arr.length-1]:null;
+}
+function investProfit(inv){if(inv.status!=='redeemed')return null;return num(inv.redeemAmount)-num(inv.investAmount);}
 function realizedProfit(){let t=0;state.investments.forEach(function(i){const p=investProfit(i);if(p!==null)t+=p;});return t;}
 function holdingCount(){return state.investments.filter(function(i){return i.status==='holding';}).length;}
+function holdingPrincipal(){let t=0;state.investments.forEach(function(i){if(i.status==='holding')t+=num(i.investAmount);});return t;}
+
+/* 单月核心计算
+   I 收入 · A 总资产 · C 现金类合计 · M 理财市值
+   F 净投入理财 = 投入 − 赎回 · G 理财浮盈亏 · E 日常支出
+   G = ΔM − F        E = I − ΔC − F        ΔA = I − E + G            */
+function calcMonth(s){
+  const prev=prevSnapOf(s.month);
+  const total=snapTotal(s),cash=cashTotal(s),inv=investValue(s);
+  const income=num(s.income),fin=num(s.investIn),fout=num(s.investOut),f=fin-fout;
+  const r={month:s.month,snap:s,prev:prev,status:'ok',span:1,hints:[],
+    total:total,cash:cash,investValue:inv,income:income,investIn:fin,investOut:fout,f:f,
+    prevTotal:null,prevCash:null,prevInvestValue:null,
+    deltaA:null,deltaC:null,deltaM:null,g:null,dailyExpense:null};
+  if(!prev){
+    r.status='baseline';
+    r.hints.push('这是第一条记录，仅作起点，不计算当月支出与理财盈亏');
+    return r;
+  }
+  r.prevTotal=snapTotal(prev);r.prevCash=cashTotal(prev);r.prevInvestValue=investValue(prev);
+  r.deltaA=total-r.prevTotal;r.deltaC=cash-r.prevCash;r.deltaM=inv-r.prevInvestValue;
+  r.g=r.deltaM-f;
+  r.dailyExpense=income-r.deltaC-f;
+  r.span=monthDiff(prev.month,s.month);
+  if(r.span>1){
+    r.status='catchup';
+    r.hints.push('距上次记录已过 '+r.span+' 个月，本期支出/理财盈亏是这 '+r.span+' 个月的合计');
+  }
+  if(income===0){
+    if(r.status==='ok')r.status='noincome';
+    r.hints.push('本月收入填的是 0：如果确实没收入请忽略；如果有收入没填，支出会被算低');
+  }
+  if(r.dailyExpense<0){
+    r.hints.push('支出算出负数：说明本月现金不降反增，且增幅超过你填的收入，通常是收入没填全（奖金 / 报销 / 回款），或渠道余额填错了');
+  }
+  return r;
+}
+/* 全年汇总 */
+function calcYear(year){
+  const y=String(year);
+  const all=sortedSnaps();
+  const inYear=all.filter(function(s){return s.month.slice(0,4)===y;});
+  const r={year:y,months:inYear.length,income:0,dailyExpense:0,investProfit:0,
+    investIn:0,investOut:0,netInvest:0,cashStart:null,cashEnd:null,
+    assetStart:null,assetEnd:null,assetNet:null,
+    countedMonths:0,catchupMonths:0,baselineMonths:0,hasPrevYear:false,hasData:inYear.length>0};
+  if(!inYear.length)return r;
+  const before=all.filter(function(s){return s.month.slice(0,4)<y;});
+  r.hasPrevYear=before.length>0;
+  if(r.hasPrevYear){
+    const p=before[before.length-1];
+    r.assetStart=snapTotal(p);r.cashStart=cashTotal(p);
+  }else{
+    r.assetStart=snapTotal(inYear[0]);r.cashStart=cashTotal(inYear[0]);
+  }
+  r.assetEnd=snapTotal(inYear[inYear.length-1]);
+  r.cashEnd=cashTotal(inYear[inYear.length-1]);
+  r.assetNet=r.assetEnd-r.assetStart;
+  inYear.forEach(function(s){
+    const c=calcMonth(s);
+    r.income+=c.income;
+    r.investIn+=c.investIn;r.investOut+=c.investOut;r.netInvest+=c.f;
+    if(c.status==='baseline'){r.baselineMonths++;return;}
+    r.dailyExpense+=c.dailyExpense;
+    r.investProfit+=c.g;
+    r.countedMonths++;
+    if(c.span>1)r.catchupMonths++;
+  });
+  return r;
+}
+/* 有数据的年份（倒序），保证当前年份在内 */
+function yearOptions(){
+  const set={};
+  set[String(today.getFullYear())]=1;
+  state.snapshots.forEach(function(s){set[s.month.slice(0,4)]=1;});
+  return Object.keys(set).sort(function(a,b){return b.localeCompare(a);});
+}
 
 /* ==================== 通用 UI ==================== */
 function closeModal(){document.getElementById('modalRoot').innerHTML='';}
@@ -321,20 +538,58 @@ function initIOS(){
   if(isIOS&&isSafari&&!standalone)document.body.classList.add('is-ios-safari');
 }
 
-/* ==================== 首页渲染 ==================== */
+/* ==================== 首页 · 年度总览 ==================== */
+let viewYear=null;
+
+function pickYear(){
+  const cur=String(today.getFullYear());
+  const hasCur=state.snapshots.some(function(s){return s.month.slice(0,4)===cur;});
+  if(hasCur)return today.getFullYear();
+  const latest=latestSnap();
+  if(latest)return Number(latest.month.slice(0,4));
+  return today.getFullYear();
+}
+function renderYearBar(){
+  const sel=document.getElementById('yearSel');
+  const opts=yearOptions();
+  sel.innerHTML=opts.map(function(y){
+    return '<option value="'+y+'"'+(String(viewYear)===String(y)?' selected':'')+'>'+y+' 年</option>';
+  }).join('');
+}
 function renderTodo(){
   const box=document.getElementById('todoList');const items=[];
-  if(!hasMonth(CUR_MONTH)){
-    const day=today.getDate(),overdue=day>5;
-    items.push({badge:overdue?'逾期':'待办',cls:overdue?'bad':'warn',
-      title:monthLabel(CUR_MONTH)+'资产尚未记录',
-      desc:overdue?('已过 '+day+' 号，本月资产还没记账，建议尽快补上'):'本月还没记账，月初记录更省心',
-      href:'assets.html',act:'去记录'});
+  const latest=latestSnap();
+  if(!state.snapshots.length){
+    items.push({badge:'开始',cls:'warn',title:'账本还是空的，先记第一笔',
+      desc:'第一次记录只当起点（不清算支出）。之后每个月记一次，支出自动倒推出来',
+      href:'assets.html',act:'去记账'});
+  }else{
+    if(!hasMonth(CUR_MONTH)){
+      const day=today.getDate(),overdue=day>5;
+      const gap=monthDiff(latest.month,CUR_MONTH);
+      items.push({badge:overdue?'逾期':'待办',cls:overdue?'bad':'warn',
+        title:monthLabel(CUR_MONTH)+'还没记账',
+        desc:gap>1?('已经漏了 '+(gap-1)+' 个月，补记时支出会合并到一条里，注意核对'):(overdue?'已过 '+day+' 号，建议尽快补上':'月初记一次最省心'),
+        href:'assets.html',act:'去记账'});
+    }
+    const lastCalc=calcMonth(latest);
+    if(lastCalc.status!=='baseline'&&lastCalc.g<0){
+      items.push({badge:'关注',cls:'info',title:'最近一期理财浮亏 '+fmtMoney(-lastCalc.g),
+        desc:monthLabel(latest.month)+' 市值跌了，属于浮亏，不影响你日常支出统计',
+        href:'invest.html',act:'看明细'});
+    }
+    if(latest.investIn===0&&latest.investOut===0&&investValue(latest)>0){
+      items.push({badge:'核对',cls:'warn',title:'最近一期没填理财投入/赎回',
+        desc:'如果这月确实没买卖请忽略；若有，浮盈亏会算不准',
+        href:'assets.html',act:'去补填'});
+    }
   }
-  const hc=holdingCount();
-  if(hc>0)items.push({badge:'关注',cls:'info',title:'有 '+hc+' 笔投资持有中',
-    desc:'记得关注黄金 / 债基的赎回时机与收益',href:'invest.html',act:'去看看'});
-  if(!items.length){box.innerHTML='<div class="empty-ok">'+icon('check',18)+' 本月已记账，暂无待处理事项</div>';return;}
+  if(state.snapshots.length+state.investments.length>=30){
+    items.push({badge:'备份',cls:'info',title:'数据已积累 '+(state.snapshots.length+state.investments.length)+' 条',
+      desc:'建议去设置页导出一次 JSON 备份，防止清理浏览器后丢失',
+      href:'settings.html',act:'去备份'});
+  }
+  if(!items.length){box.innerHTML='<div class="empty-ok">'+icon('check',18)+' 本月已记账，没有要处理的事</div>';return;}
   box.innerHTML=items.map(function(it){
     return '<div class="todo-item"><span class="badge '+it.cls+'">'+it.badge+'</span>'+
       '<div class="txt"><b>'+esc(it.title)+'</b><small>'+esc(it.desc)+'</small></div>'+
@@ -342,78 +597,163 @@ function renderTodo(){
   }).join('');
 }
 function renderStats(){
-  const latest=latestSnap(),prev=prevSnap();
-  const total=latest?snapTotal(latest):null;
-  let diff=null;if(latest&&prev)diff=snapTotal(latest)-snapTotal(prev);
-  document.getElementById('lab1').innerHTML=icon('wallet',16)+'当前总资产';
-  document.getElementById('num1').textContent=fmtMoney(total);
-  document.getElementById('sub1').textContent=latest?('截至 '+latest.month):'暂无记录';
-  const cls=diff===null?'':(diff>0?'up':(diff<0?'down':''));
-  const arrow=diff===null?'':(diff>0?' ↑':(diff<0?' ↓':''));
-  document.getElementById('lab2').innerHTML=icon('chart',16)+'较上月变化';
-  document.getElementById('num2').textContent=diff===null?'—':((diff>0?'+':'')+fmtMoney(diff)+arrow);
-  document.getElementById('num2').className='num '+cls;
-  document.getElementById('sub2').textContent=(latest&&prev)?(monthLabel(prev.month)+' → '+monthLabel(latest.month)):'至少需两条记录';
-  document.getElementById('lab3').innerHTML=icon('invest',16)+'累计已实现收益';
-  const rp=realizedProfit();
-  document.getElementById('num3').textContent=fmtMoney(rp);
-  document.getElementById('num3').className='num '+(rp>0?'up':(rp<0?'down':''));
-  document.getElementById('sub3').textContent='已赎回投资的盈亏合计';
-  document.getElementById('lab4').innerHTML=icon('coin',16)+'持有中投资';
-  document.getElementById('num4').textContent=holdingCount()+' 笔';
-  document.getElementById('sub4').textContent='黄金 / 债基等在途';
+  const r=calcYear(viewYear);
+  const setCard=function(i,lab,val,cls,sub){
+    document.getElementById('lab'+i).innerHTML=lab;
+    const el=document.getElementById('num'+i);
+    el.textContent=val;el.className='num '+(cls||'');
+    document.getElementById('sub'+i).textContent=sub;
+  };
+  if(!r.hasData){
+    setCard(1,icon('coin',16)+'年度收入','—','','还没有记录');
+    setCard(2,icon('minus',16)+'年度日常支出','—','','还没有记录');
+    setCard(3,icon('invest',16)+'年度理财盈亏','—','','还没有记录');
+    setCard(4,icon('chart',16)+'资产净增','—','','还没有记录');
+    document.getElementById('yearHint').textContent=String(viewYear)+' 年暂无数据';
+    return;
+  }
+  setCard(1,icon('coin',16)+'年度收入',fmtMoney(r.income),'g',
+    '已统计 '+r.countedMonths+' 个月');
+  setCard(2,icon('minus',16)+'年度日常支出',fmtMoney(r.dailyExpense),'r',
+    '余额倒推，不用逐笔记');
+  setCard(3,icon('invest',16)+'年度理财盈亏',fmtSigned(r.investProfit),clsOf(r.investProfit),
+    '市值变化 − 净投入 '+fmtWan(r.netInvest));
+  setCard(4,icon('chart',16)+'资产净增',fmtSigned(r.assetNet),clsOf(r.assetNet),
+    r.hasPrevYear?('年初 → '+monthLabel(String(viewYear)+'-'+String(latestMonthNo(r)).padStart(2,'0'))):'本年为起点，仅供参考');
+  let hint=String(viewYear)+' 年记录了 '+r.months+' 个月';
+  if(!r.hasPrevYear)hint+='（无上年数据，资产净增以本年首条为起点）';
+  if(r.catchupMonths>0)hint+='，其中 '+r.catchupMonths+' 期跨月合并';
+  document.getElementById('yearHint').textContent=hint;
+}
+function latestMonthNo(r){
+  const y=String(viewYear);
+  const arr=sortedSnaps().filter(function(s){return s.month.slice(0,4)===y;});
+  return arr.length?arr[arr.length-1].month.split('-')[1]:'01';
 }
 function renderChart(){
-  const box=document.getElementById('chartWrap');
-  const arr=sortedSnaps().slice(-6);
-  if(arr.length<2){box.innerHTML='<div class="empty">'+icon('chart',24)+'<span>至少记录 2 个月，即可查看资产变化趋势</span></div>';return;}
-  const W=640,H=210,padL=54,padR=16,padT=16,padB=34;
-  const vals=arr.map(snapTotal);
-  let min=Math.min.apply(null,vals),max=Math.max.apply(null,vals);
-  const span=(max-min)||1;min=Math.max(0,min-span*0.15);max=max+span*0.15;
-  const iw=W-padL-padR,ih=H-padT-padB;
-  const pts=arr.map(function(s,i){
-    const x=padL+(arr.length===1?iw/2:iw*i/(arr.length-1));
-    const y=padT+ih-(snapTotal(s)-min)/(max-min)*ih;
-    return {x:x,y:y,s:s,v:snapTotal(s)};
+  const box=document.getElementById('trendWrap');
+  const leg=document.getElementById('trendLegend');
+  const y=String(viewYear);
+  const months=[];for(let m=1;m<=12;m++)months.push(y+'-'+String(m).padStart(2,'0'));
+  const map={};sortedSnaps().forEach(function(s){map[s.month]=s;});
+  const has=months.some(function(m){return map[m];});
+  if(!has){
+    box.innerHTML='<div class="empty">'+icon('chart',24)+'<span>'+y+' 年还没有记录，去资产页记一笔就能看到走势</span></div>';
+    leg.innerHTML='';return;
+  }
+  const W=680,H=236,padL=46,padR=52,padT=18,padB=28;
+  const iw=W-padL-padR,ih=H-padT-padB,slot=iw/12;
+  let maxFlow=1;
+  const rows=months.map(function(m){
+    const s=map[m];
+    if(!s)return {m:m,has:false};
+    const c=calcMonth(s);
+    const inc=c.income,exp=(c.status==='baseline'?0:c.dailyExpense);
+    if(Math.abs(inc)>maxFlow)maxFlow=Math.abs(inc);
+    if(Math.abs(exp)>maxFlow)maxFlow=Math.abs(exp);
+    return {m:m,has:true,c:c,inc:inc,exp:exp,asset:c.total};
   });
+  maxFlow=maxFlow*1.15;
+  const as=rows.filter(function(r){return r.has;}).map(function(r){return r.asset;});
+  let aMin=Math.min.apply(null,as),aMax=Math.max.apply(null,as);
+  if(aMax-aMin<1){aMin=aMin-1;aMax=aMax+1;}
+  const pad=(aMax-aMin)*0.2;aMin-=pad;aMax+=pad;
+  const xOf=function(i){return padL+slot*(i+0.5);};
+  const yF=function(v){return padT+ih-Math.max(0,v)/maxFlow*ih;};
+  const yA=function(v){return padT+ih-(v-aMin)/(aMax-aMin)*ih;};
+  const bw=Math.max(4,Math.min(11,slot*0.3));
+
   let grid='';
   for(let g=0;g<=3;g++){
-    const gy=padT+ih*g/3,gv=max-(max-min)*g/3;
-    grid+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="rgba(37,99,235,.1)" stroke-dasharray="4 4"/>'+
-      '<text x="'+(padL-8)+'" y="'+(gy+4)+'" fill="#94A3B8" font-size="10" text-anchor="end">'+fmtWan(gv)+'</text>';
+    const gy=padT+ih*g/3,gv=maxFlow*(1-g/3);
+    grid+='<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+gy.toFixed(1)+'" stroke="rgba(37,99,235,.1)" stroke-dasharray="4 4"/>'+
+      '<text x="'+(padL-7)+'" y="'+(gy+3.5).toFixed(1)+'" fill="#94A3B8" font-size="9.5" text-anchor="end">'+fmtWan(gv)+'</text>';
   }
-  const line=pts.map(function(p,i){return (i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1);}).join(' ');
-  const area=line+' L'+pts[pts.length-1].x.toFixed(1)+' '+(padT+ih)+' L'+pts[0].x.toFixed(1)+' '+(padT+ih)+' Z';
-  let dots='';
-  pts.forEach(function(p){
-    const lbl=Number(p.s.month.split('-')[1])+'月';
-    dots+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="4.5" fill="#fff" stroke="#2563EB" stroke-width="2.5"/>';
-    dots+='<text x="'+p.x.toFixed(1)+'" y="'+(p.y-11).toFixed(1)+'" fill="#1E3A5F" font-size="10" font-weight="700" text-anchor="middle">'+fmtWan(p.v)+'</text>';
-    dots+='<text x="'+p.x.toFixed(1)+'" y="'+(H-10)+'" fill="#5B7DA6" font-size="11" text-anchor="middle">'+lbl+'</text>';
+  /* 右侧资产轴 */
+  for(let g=0;g<=2;g++){
+    const gy=padT+ih*g/2,gv=aMax-(aMax-aMin)*g/2;
+    grid+='<text x="'+(W-padR+6)+'" y="'+(gy+3.5).toFixed(1)+'" fill="#2563EB" font-size="9.5">'+fmtWan(gv)+'</text>';
+  }
+
+  let bars='',pts=[];
+  rows.forEach(function(r,i){
+    const cx=xOf(i);
+    bars+='<text x="'+cx.toFixed(1)+'" y="'+(H-9)+'" fill="'+(r.has?'#5B7DA6':'#C7D2E0')+'" font-size="10" text-anchor="middle">'+(i+1)+'月</text>';
+    if(!r.has)return;
+    if(r.inc>0){
+      const yy=yF(r.inc);
+      bars+='<rect x="'+(cx-bw-1).toFixed(1)+'" y="'+yy.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(padT+ih-yy).toFixed(1)+'" rx="2.5" fill="#15803D" opacity=".82"/>';
+    }
+    if(r.exp>0){
+      const yy=yF(r.exp);
+      bars+='<rect x="'+(cx+1).toFixed(1)+'" y="'+yy.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(padT+ih-yy).toFixed(1)+'" rx="2.5" fill="#DC2626" opacity=".8"/>';
+    }
+    pts.push({x:cx,y:yA(r.asset)});
   });
+  let line='',dots='';
+  if(pts.length){
+    line=pts.map(function(p,i){return (i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1);}).join(' ');
+    pts.forEach(function(p){
+      dots+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3.4" fill="#fff" stroke="#2563EB" stroke-width="2"/>';
+    });
+  }
   box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+
-    '<defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563EB" stop-opacity=".22"/><stop offset="100%" stop-color="#2563EB" stop-opacity="0"/></linearGradient></defs>'+
-    grid+'<path d="'+area+'" fill="url(#gArea)"/><path d="'+line+'" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+dots+'</svg>';
+    '<line x1="'+padL+'" y1="'+(padT+ih)+'" x2="'+(W-padR)+'" y2="'+(padT+ih)+'" stroke="rgba(37,99,235,.22)"/>'+
+    grid+bars+
+    (line?'<path d="'+line+'" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>'+dots:'')+
+    '</svg>';
+  leg.innerHTML='<span><i style="background:#15803D"></i>收入</span>'+
+    '<span><i style="background:#DC2626"></i>日常支出</span>'+
+    '<span><i style="background:#2563EB"></i>期末总资产</span>';
 }
-function renderRecent(){
-  const box=document.getElementById('recentList');
-  const arr=sortedSnaps().reverse().slice(0,3);
-  if(!arr.length){box.innerHTML='<div class="empty">'+icon('calendar',24)+'<span>还没有资产记录</span></div>';return;}
-  let h='<div class="table-wrap"><table><thead><tr><th>月份</th><th class="num">总资产</th><th>备注</th></tr></thead><tbody>';
+function renderTable(){
+  const box=document.getElementById('monthTableWrap');
+  const y=String(viewYear);
+  const arr=sortedSnaps().filter(function(s){return s.month.slice(0,4)===y;});
+  document.getElementById('tableHint').textContent=arr.length?('共 '+arr.length+' 个月，点资产页可编辑'):'这一年还没有记录';
+  if(!arr.length){box.innerHTML='<div class="empty">'+icon('calendar',24)+'<span>没有 '+y+' 年的记录</span></div>';return;}
+  let h='<table><thead><tr><th>月份</th><th class="num">收入</th><th class="num">日常支出</th>'+
+    '<th class="num">理财投入</th><th class="num">理财赎回</th><th class="num">理财盈亏</th><th class="num">期末总资产</th><th>状态</th></tr></thead><tbody>';
+  let tI=0,tE=0,tG=0,tF=0,tO=0;
   arr.forEach(function(s){
-    h+='<tr><td><b>'+monthLabel(s.month)+'</b></td><td class="num" style="color:#172554">'+fmtMoney(snapTotal(s))+'</td>'+
-       '<td>'+(s.note?esc(s.note):'<span style="color:#94A3B8">—</span>')+'</td></tr>';
+    const c=calcMonth(s);
+    tI+=c.income;
+    if(c.status!=='baseline'){tE+=c.dailyExpense;tG+=c.g;}
+    tF+=c.investIn;tO+=c.investOut;
+    let st='';
+    if(c.status==='baseline')st='<span class="tag base">起点</span>';
+    else if(c.status==='catchup')st='<span class="tag hold">跨 '+c.span+' 月</span>';
+    else if(c.status==='noincome')st='<span class="tag hold">缺收入</span>';
+    else st='<span class="tag done">正常</span>';
+    h+='<tr><td><b>'+monthLabel(s.month)+'</b></td>'+
+      '<td class="num">'+fmtNum(c.income)+'</td>'+
+      '<td class="num '+(c.status==='baseline'?'n':(c.dailyExpense>0?'r':'n'))+'">'+(c.status==='baseline'?'—':fmtNum(c.dailyExpense))+'</td>'+
+      '<td class="num">'+(c.investIn?fmtNum(c.investIn):'—')+'</td>'+
+      '<td class="num">'+(c.investOut?fmtNum(c.investOut):'—')+'</td>'+
+      '<td class="num '+clsOf(c.g)+'">'+(c.g===null?'—':fmtSignedNum(c.g))+'</td>'+
+      '<td class="num" style="color:#172554">'+fmtNum(c.total)+'</td>'+
+      '<td>'+st+'</td></tr>';
   });
-  h+='</tbody></table></div>';
+  h+='</tbody><tfoot><tr><td>合计</td><td class="num g">'+fmtNum(tI)+'</td><td class="num r">'+fmtNum(tE)+'</td>'+
+    '<td class="num">'+fmtNum(tF)+'</td><td class="num">'+fmtNum(tO)+'</td><td class="num '+clsOf(tG)+'">'+fmtSignedNum(tG)+'</td>'+
+    '<td class="num">—</td><td></td></tr></tfoot></table>';
   box.innerHTML=h;
 }
-function refreshAll(){renderTodo();renderStats();renderChart();renderRecent();}
+function refreshAll(){
+  renderYearBar();
+  renderTodo();
+  renderStats();
+  renderChart();
+  renderTable();
+}
 document.addEventListener('DOMContentLoaded',function(){
   initIOS();
-  document.getElementById('brandIco').innerHTML=icon('wallet',22);
-  document.getElementById('goAssets').innerHTML=icon('plus',15)+' 记一笔资产';
-  document.getElementById('seeAll').innerHTML='全部记录';
+  viewYear=pickYear();
+  document.getElementById('brandIco').innerHTML=icon('chart',22);
+  document.getElementById('goAssets').innerHTML=icon('plus',15)+' 记一笔';
+  document.getElementById('yearSel').onchange=function(){
+    viewYear=Number(this.value);refreshAll();
+  };
   refreshAll();
 });
 </script>
