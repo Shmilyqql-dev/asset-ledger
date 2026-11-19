@@ -230,9 +230,11 @@
   </div>
 
   <div class="glass panel">
-    <div class="panel-head"><div><h2>全部记录</h2><div class="hint" id="snapCountHint"></div></div></div>
+    <div class="panel-head"><div><h2>全部记录</h2><div class="hint" id="snapCountHint"></div></div>
+      <div class="row-actions"><button class="btn btn-ghost btn-sm" id="btnRelink"></button></div></div>
     <div class="table-wrap" id="snapTableWrap"></div>
-    <div class="tip"><b>总资产 = 现金 + 理财</b>，也就是你填的各渠道余额之和。<b>收入不会再单独加一次</b>——工资到账后钱已经在下面对应渠道的余额里了，再加就重复了。收入这一栏只用来倒推日常支出。</div>
+    <div class="tip"><b>总资产 = 现金 + 理财</b>，也就是你填的各渠道余额之和。<b>收入不会再单独加一次</b>——工资到账后钱已经在下面对应渠道的余额里了，再加就重复了。收入这一栏只用来倒推日常支出。<br>
+    <b style="color:#B45309">「投入 / 赎回」默认按投资页的买卖记录自动汇总</b>，投资页记一次就够，不用在两边各填一遍。某个手改过的月份，以你填的数字为准。</div>
   </div>
 
 </div>
@@ -338,7 +340,8 @@ function migrateState(raw){
       investOut:num(s.investOut),
       values:vals,
       note:s.note?String(s.note):'',
-      isCatchUp:!!s.isCatchUp
+      isCatchUp:!!s.isCatchUp,
+      investAuto:s.investAuto===true
     });
   });
 
@@ -412,6 +415,18 @@ function realizedProfit(){let t=0;state.investments.forEach(function(i){const p=
 function holdingCount(){return state.investments.filter(function(i){return i.status==='holding';}).length;}
 function holdingPrincipal(){let t=0;state.investments.forEach(function(i){if(i.status==='holding')t+=num(i.investAmount);});return t;}
 
+/* 按月份汇总投资页的买卖（用于资产页自动带入投入/赎回）
+   investDate / redeemDate 形如 2026-11-08，取前 7 位归属月份 */
+function invSumOfMonth(month){
+  let ins=0,outs=0,cnt=0;
+  state.investments.forEach(function(v){
+    if(!v)return;
+    if(v.investDate&&String(v.investDate).slice(0,7)===month){ins+=num(v.investAmount);cnt++;}
+    if(v.status==='redeemed'&&v.redeemDate&&String(v.redeemDate).slice(0,7)===month){outs+=num(v.redeemAmount);cnt++;}
+  });
+  return {ins:ins,outs:outs,cnt:cnt};
+}
+
 /* 单月核心计算
    I 收入 · A 总资产 · C 现金类合计 · M 理财市值
    F 净投入理财 = 投入 − 赎回 · G 理财浮盈亏 · E 日常支出
@@ -419,7 +434,10 @@ function holdingPrincipal(){let t=0;state.investments.forEach(function(i){if(i.s
 function calcMonth(s){
   const prev=prevSnapOf(s.month);
   const total=snapTotal(s),cash=cashTotal(s),inv=investValue(s);
-  const income=num(s.income),fin=num(s.investIn),fout=num(s.investOut),f=fin-fout;
+  const income=num(s.income);
+  let fin=num(s.investIn),fout=num(s.investOut);
+  if(s.investAuto===true){const sm=invSumOfMonth(s.month);fin=sm.ins;fout=sm.outs;}
+  const f=fin-fout;
   const r={month:s.month,snap:s,prev:prev,status:'ok',span:1,hints:[],
     total:total,cash:cash,investValue:inv,income:income,investIn:fin,investOut:fout,f:f,
     prevTotal:null,prevCash:null,prevInvestValue:null,
@@ -520,6 +538,7 @@ function initIOS(){
 
 /* ==================== 资产页 · 月度记账 ==================== */
 let editingId=null;
+let investMode='auto';   /* auto=按投资页自动汇总，manual=这月以手填为准 */
 
 function kindTag(c){
   return chIsInv(c)?'<span class="mini-tag inv">理财</span>':'<span class="mini-tag cash">现金</span>';
@@ -616,10 +635,27 @@ function updatePreview(){
   if(hints.length)h+='<div class="hintline">'+hints.join('<br>')+quick+'</div>';
   box.innerHTML=h;
 }
+function autoNoteText(sm){
+  if(investMode!=='auto')return '<b style="color:#B45309">手动填写</b>：这个月的投入 / 赎回以你填的数字为准，不再跟投资页联动。';
+  if(sm.cnt>0)return '已按<b>投资页</b>本月 '+sm.cnt+' 笔买卖自动带入（买入 '+fmtMoney(sm.ins)+'、赎回 '+fmtMoney(sm.outs)+'）。直接改上面的数字 = 改为手动填写。';
+  return '本月<b>投资页</b>还没有买卖记录，所以这里是 0。如果你在别处买了理财，直接填数字就行（会自动切到手写模式）。';
+}
+function syncAutoInvest(){
+  if(investMode!=='auto')return;
+  const m=document.getElementById('f_month').value||CUR_MONTH;
+  const sm=invSumOfMonth(m);
+  const fi=document.getElementById('f_fin'),fo=document.getElementById('f_fout');
+  if(fi)fi.value=sm.ins||'';
+  if(fo)fo.value=sm.outs||'';
+  const n=document.getElementById('autoNote');if(n)n.innerHTML=autoNoteText(sm);
+}
 function quickFillInvest(v){
   const fin=document.getElementById('f_fin');if(!fin)return;
   fin.value=Math.round(v*100)/100;
   const fout=document.getElementById('f_fout');if(fout)fout.value='';
+  investMode='manual';
+  const nn=document.getElementById('autoNote');
+  if(nn)nn.innerHTML=autoNoteText({cnt:0,ins:0,outs:0});
   updatePreview();
   toast('已按现金减少额填入投入，如有差额请自行调整');
 }
@@ -645,10 +681,15 @@ function snapForm(s){
       '<input type="number" inputmode="decimal" step="0.01" min="0" data-ch="'+esc(nm)+'" data-inv="'+(chIsInv(c)?'1':'0')+'" value="'+(v===undefined||v===null?'':v)+'" placeholder="0.00"></div>';
   });
   f+='</div>';
-  f+='<div class="field" style="margin-bottom:8px"><label>本月买入 / 卖出理财（合计）——用现金买了理财，这里必须填</label></div><div class="grid2">'+
-    '<div class="field"><label>买入 / 投入（元）</label><input type="number" inputmode="decimal" step="0.01" min="0" id="f_fin" value="'+(cur.investIn?num(cur.investIn):'')+'" placeholder="0.00"></div>'+
-    '<div class="field"><label>卖出 / 赎回（元）</label><input type="number" inputmode="decimal" step="0.01" min="0" id="f_fout" value="'+(cur.investOut?num(cur.investOut):'')+'" placeholder="0.00"></div>'+
+  const autoSum=invSumOfMonth(cur.month);
+  investMode=(isEdit&&cur.investAuto===false)?'manual':'auto';
+  const finInit=investMode==='auto'?autoSum.ins:num(cur.investIn);
+  const foutInit=investMode==='auto'?autoSum.outs:num(cur.investOut);
+  f+='<div class="field" style="margin-bottom:8px"><label>本月买入 / 卖出理财（合计）</label></div><div class="grid2">'+
+    '<div class="field"><label>买入 / 投入（元）</label><input type="number" inputmode="decimal" step="0.01" min="0" id="f_fin" value="'+(finInit||'')+'" placeholder="0.00"></div>'+
+    '<div class="field"><label>卖出 / 赎回（元）</label><input type="number" inputmode="decimal" step="0.01" min="0" id="f_fout" value="'+(foutInit||'')+'" placeholder="0.00"></div>'+
     '</div>';
+  f+='<div class="tip" id="autoNote" style="margin:-4px 0 14px">'+autoNoteText(autoSum)+'</div>';
   f+='<div class="preview" id="pvBox"></div>';
   f+='<div class="field"><label>备注（选填）</label><textarea id="f_note" placeholder="如：本月赎回债基 1 万">'+esc(cur.note)+'</textarea></div>';
   openModal(isEdit?'编辑这条记录':(prefilled?'记一笔（已按上月预填）':'记一笔'),f,
@@ -658,7 +699,17 @@ function snapForm(s){
   document.querySelectorAll('#modalRoot input').forEach(function(inp){
     inp.addEventListener('input',updatePreview);
   });
-  document.getElementById('f_month').addEventListener('change',updatePreview);
+  document.getElementById('f_month').addEventListener('change',function(){syncAutoInvest();updatePreview();});
+  ['f_fin','f_fout'].forEach(function(id){
+    const el=document.getElementById(id);if(!el)return;
+    el.addEventListener('input',function(){
+      if(investMode==='auto'){
+        investMode='manual';
+        const n=document.getElementById('autoNote');
+        if(n)n.innerHTML=autoNoteText({cnt:0,ins:0,outs:0});
+      }
+    });
+  });
   if(prefilled){
     document.getElementById('fillPrev').onclick=function(){
       const p=prevForForm(document.getElementById('f_month').value);
@@ -689,6 +740,7 @@ function saveSnap(origin){
     income:num(document.getElementById('f_income').value),
     investIn:num(document.getElementById('f_fin').value),
     investOut:num(document.getElementById('f_fout').value),
+    investAuto:investMode==='auto',
     values:values,
     note:document.getElementById('f_note').value.trim(),
     isCatchUp:o.prev?o.span>1:false
@@ -739,6 +791,13 @@ function removeChannel(c){
   });
 }
 /* ---------- 导出 ---------- */
+function relinkAll(){
+  showConfirm('把<b>全部月份</b>的「投入 / 赎回」改为按投资页买卖记录自动汇总？<br><br>之前手填过、但投资页没有对应买卖记录的月份，这两项会变成 0。建议先在设置页导出一份 JSON 备份。',function(){
+    state.snapshots.forEach(function(s){s.investAuto=true;});
+    saveState();refreshAll();
+    toast('已改为自动汇总，数字已重算');
+  });
+}
 function exportSnapCsv(){
   const chs=state.channels.map(chName);
   const head=['月份','收入'].concat(chs.map(function(n){return n+(isInvestChannel(n)?'(理财)':'(现金)');}))
@@ -764,6 +823,8 @@ document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('btnAddSnap').innerHTML=icon('plus',15)+' 记一笔';
   document.getElementById('btnExportSnapCsv').onclick=exportSnapCsv;
   document.getElementById('btnAddSnap').onclick=addSnap;
+  document.getElementById('btnRelink').innerHTML=icon('redo',14)+' 按投资页重算';
+  document.getElementById('btnRelink').onclick=relinkAll;
   refreshAll();
 });
 </script>
