@@ -253,6 +253,7 @@
       <a class="btn btn-ghost btn-sm" href="assets.html">去记账</a>
     </div>
     <div class="table-wrap" id="monthTableWrap"></div>
+    <div class="tip"><b>期初 + 收入 − 日常支出 + 理财盈亏 = 期末</b>。买入 / 赎回只是把钱从现金挪到理财，左右手搬家，不影响总额。</div>
   </div>
 
 </div>
@@ -358,7 +359,8 @@ function migrateState(raw){
       investOut:num(s.investOut),
       values:vals,
       note:s.note?String(s.note):'',
-      isCatchUp:!!s.isCatchUp
+      isCatchUp:!!s.isCatchUp,
+      investAuto:s.investAuto===true
     });
   });
 
@@ -432,6 +434,18 @@ function realizedProfit(){let t=0;state.investments.forEach(function(i){const p=
 function holdingCount(){return state.investments.filter(function(i){return i.status==='holding';}).length;}
 function holdingPrincipal(){let t=0;state.investments.forEach(function(i){if(i.status==='holding')t+=num(i.investAmount);});return t;}
 
+/* 按月份汇总投资页的买卖（用于资产页自动带入投入/赎回）
+   investDate / redeemDate 形如 2026-11-08，取前 7 位归属月份 */
+function invSumOfMonth(month){
+  let ins=0,outs=0,cnt=0;
+  state.investments.forEach(function(v){
+    if(!v)return;
+    if(v.investDate&&String(v.investDate).slice(0,7)===month){ins+=num(v.investAmount);cnt++;}
+    if(v.status==='redeemed'&&v.redeemDate&&String(v.redeemDate).slice(0,7)===month){outs+=num(v.redeemAmount);cnt++;}
+  });
+  return {ins:ins,outs:outs,cnt:cnt};
+}
+
 /* 单月核心计算
    I 收入 · A 总资产 · C 现金类合计 · M 理财市值
    F 净投入理财 = 投入 − 赎回 · G 理财浮盈亏 · E 日常支出
@@ -439,7 +453,10 @@ function holdingPrincipal(){let t=0;state.investments.forEach(function(i){if(i.s
 function calcMonth(s){
   const prev=prevSnapOf(s.month);
   const total=snapTotal(s),cash=cashTotal(s),inv=investValue(s);
-  const income=num(s.income),fin=num(s.investIn),fout=num(s.investOut),f=fin-fout;
+  const income=num(s.income);
+  let fin=num(s.investIn),fout=num(s.investOut);
+  if(s.investAuto===true){const sm=invSumOfMonth(s.month);fin=sm.ins;fout=sm.outs;}
+  const f=fin-fout;
   const r={month:s.month,snap:s,prev:prev,status:'ok',span:1,hints:[],
     total:total,cash:cash,investValue:inv,income:income,investIn:fin,investOut:fout,f:f,
     prevTotal:null,prevCash:null,prevInvestValue:null,
@@ -714,7 +731,7 @@ function renderTable(){
   const arr=sortedSnaps().filter(function(s){return s.month.slice(0,4)===y;});
   document.getElementById('tableHint').textContent=arr.length?('共 '+arr.length+' 个月，点资产页可编辑'):'这一年还没有记录';
   if(!arr.length){box.innerHTML='<div class="empty">'+icon('calendar',24)+'<span>没有 '+y+' 年的记录</span></div>';return;}
-  let h='<table><thead><tr><th>月份</th><th class="num">收入</th><th class="num">日常支出</th>'+
+  let h='<table><thead><tr><th>月份</th><th class="num">期初总资产</th><th class="num">收入</th><th class="num">日常支出</th>'+
     '<th class="num">理财投入</th><th class="num">理财赎回</th><th class="num">理财盈亏</th><th class="num">期末总资产</th><th>状态</th></tr></thead><tbody>';
   let tI=0,tE=0,tG=0,tF=0,tO=0;
   arr.forEach(function(s){
@@ -728,6 +745,7 @@ function renderTable(){
     else if(c.status==='noincome')st='<span class="tag hold">缺收入</span>';
     else st='<span class="tag done">正常</span>';
     h+='<tr><td><b>'+monthLabel(s.month)+'</b></td>'+
+      '<td class="num">'+(c.prevTotal===null?'—':fmtNum(c.prevTotal))+'</td>'+
       '<td class="num">'+fmtNum(c.income)+'</td>'+
       '<td class="num '+(c.status==='baseline'?'n':(c.dailyExpense>0?'r':'n'))+'">'+(c.status==='baseline'?'—':fmtNum(c.dailyExpense))+'</td>'+
       '<td class="num">'+(c.investIn?fmtNum(c.investIn):'—')+'</td>'+
@@ -736,7 +754,7 @@ function renderTable(){
       '<td class="num" style="color:#172554">'+fmtNum(c.total)+'</td>'+
       '<td>'+st+'</td></tr>';
   });
-  h+='</tbody><tfoot><tr><td>合计</td><td class="num g">'+fmtNum(tI)+'</td><td class="num r">'+fmtNum(tE)+'</td>'+
+  h+='</tbody><tfoot><tr><td>合计</td><td class="num">—</td><td class="num g">'+fmtNum(tI)+'</td><td class="num r">'+fmtNum(tE)+'</td>'+
     '<td class="num">'+fmtNum(tF)+'</td><td class="num">'+fmtNum(tO)+'</td><td class="num '+clsOf(tG)+'">'+fmtSignedNum(tG)+'</td>'+
     '<td class="num">—</td><td></td></tr></tfoot></table>';
   box.innerHTML=h;
