@@ -335,7 +335,8 @@ function migrateState(raw){
       investOut:num(s.investOut),
       values:vals,
       note:s.note?String(s.note):'',
-      isCatchUp:!!s.isCatchUp
+      isCatchUp:!!s.isCatchUp,
+      investAuto:s.investAuto===true
     });
   });
 
@@ -409,6 +410,18 @@ function realizedProfit(){let t=0;state.investments.forEach(function(i){const p=
 function holdingCount(){return state.investments.filter(function(i){return i.status==='holding';}).length;}
 function holdingPrincipal(){let t=0;state.investments.forEach(function(i){if(i.status==='holding')t+=num(i.investAmount);});return t;}
 
+/* 按月份汇总投资页的买卖（用于资产页自动带入投入/赎回）
+   investDate / redeemDate 形如 2026-11-08，取前 7 位归属月份 */
+function invSumOfMonth(month){
+  let ins=0,outs=0,cnt=0;
+  state.investments.forEach(function(v){
+    if(!v)return;
+    if(v.investDate&&String(v.investDate).slice(0,7)===month){ins+=num(v.investAmount);cnt++;}
+    if(v.status==='redeemed'&&v.redeemDate&&String(v.redeemDate).slice(0,7)===month){outs+=num(v.redeemAmount);cnt++;}
+  });
+  return {ins:ins,outs:outs,cnt:cnt};
+}
+
 /* 单月核心计算
    I 收入 · A 总资产 · C 现金类合计 · M 理财市值
    F 净投入理财 = 投入 − 赎回 · G 理财浮盈亏 · E 日常支出
@@ -416,7 +429,10 @@ function holdingPrincipal(){let t=0;state.investments.forEach(function(i){if(i.s
 function calcMonth(s){
   const prev=prevSnapOf(s.month);
   const total=snapTotal(s),cash=cashTotal(s),inv=investValue(s);
-  const income=num(s.income),fin=num(s.investIn),fout=num(s.investOut),f=fin-fout;
+  const income=num(s.income);
+  let fin=num(s.investIn),fout=num(s.investOut);
+  if(s.investAuto===true){const sm=invSumOfMonth(s.month);fin=sm.ins;fout=sm.outs;}
+  const f=fin-fout;
   const r={month:s.month,snap:s,prev:prev,status:'ok',span:1,hints:[],
     total:total,cash:cash,investValue:inv,income:income,investIn:fin,investOut:fout,f:f,
     prevTotal:null,prevCash:null,prevInvestValue:null,
